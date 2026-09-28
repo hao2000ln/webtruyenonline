@@ -1,10 +1,28 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { formatChapterNumber } from "@/lib/format";
+import { formatChapterNumber, formatReadingTime } from "@/lib/format";
+import {
+  ArrowLeft,
+  ArrowRight,
+  BookOpen,
+  Clock,
+  List,
+  SlidersHorizontal,
+  Sun,
+  Moon,
+  Sparkles,
+  Lamp,
+  Coffee,
+  ChevronUp,
+  AlignLeft,
+  AlignJustify,
+  X,
+  ArrowDownUp,
+  Search,
+} from "lucide-react";
 import {
   DEFAULT_READER_SETTINGS,
   READER_CONTENT_WIDTHS,
@@ -46,67 +64,10 @@ const fontOptions: Array<{ value: ReaderFontFamily; label: string; preview: stri
   { value: "serif", label: "Sách in (Serif)", preview: "Aa" },
 ];
 
-const alignOptions: Array<{ value: ReaderTextAlign; label: string; icon: string }> = [
-  { value: "left", label: "Căn trái", icon: "≡" },
-  { value: "justify", label: "Căn đều", icon: "≣" },
+const alignOptions: Array<{ value: ReaderTextAlign; label: string; icon: typeof AlignLeft }> = [
+  { value: "left", label: "Căn trái", icon: AlignLeft },
+  { value: "justify", label: "Căn đều", icon: AlignJustify },
 ];
-
-function ChapterNavigation({
-  storySlug,
-  previous,
-  next,
-  onOpenList,
-}: {
-  storySlug: string;
-  previous: ChapterLink;
-  next: ChapterLink;
-  onOpenList?: () => void;
-}) {
-  return (
-    <nav className="grid grid-cols-3 items-center gap-2" aria-label="Điều hướng chương">
-      {previous ? (
-        <Link
-          href={`/truyen/${storySlug}/chuong-${formatChapterNumber(previous.number)}`}
-          className="reader-outline-button justify-self-start text-xs sm:text-sm"
-          title={`Chương ${formatChapterNumber(previous.number)}: ${previous.title}`}
-        >
-          ← Trước
-        </Link>
-      ) : (
-        <span className="reader-disabled justify-self-start text-xs sm:text-sm">← Trước</span>
-      )}
-
-      {onOpenList ? (
-        <button
-          type="button"
-          onClick={onOpenList}
-          className="reader-muted justify-self-center text-center text-xs font-semibold transition hover:opacity-75 sm:text-sm"
-        >
-          ☰ Mục lục
-        </button>
-      ) : (
-        <Link
-          href={`/truyen/${storySlug}`}
-          className="reader-muted justify-self-center text-center text-xs font-semibold transition hover:opacity-75 sm:text-sm"
-        >
-          Mục lục
-        </Link>
-      )}
-
-      {next ? (
-        <Link
-          href={`/truyen/${storySlug}/chuong-${formatChapterNumber(next.number)}`}
-          className="reader-primary-button justify-self-end text-xs sm:text-sm"
-          title={`Chương ${formatChapterNumber(next.number)}: ${next.title}`}
-        >
-          Sau →
-        </Link>
-      ) : (
-        <span className="reader-disabled justify-self-end text-xs sm:text-sm">Sau →</span>
-      )}
-    </nav>
-  );
-}
 
 export function ReaderExperience({
   story,
@@ -314,7 +275,7 @@ export function ReaderExperience({
             className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-semibold opacity-85 transition hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/5"
             title="Trở về trang truyện"
           >
-            <span>←</span>
+            <ArrowLeft className="w-4 h-4" />
             <span className="hidden sm:inline">Trở về</span>
           </Link>
 
@@ -336,21 +297,21 @@ export function ReaderExperience({
               title={`Đang là theme ${settings.theme}. Bấm để đổi theme nhanh.`}
               aria-label="Đổi theme đọc nhanh"
             >
-              {settings.theme === "light" && "🌙"}
-              {settings.theme === "sepia" && "🌘"}
-              {settings.theme === "midnight" && "✨"}
-              {settings.theme === "dark" && "☀️"}
-              {settings.theme === "black" && "💡"}
+              {settings.theme === "light" && <Moon className="w-4 h-4 text-slate-700" />}
+              {settings.theme === "sepia" && <Coffee className="w-4 h-4 text-[#78350f]" />}
+              {settings.theme === "midnight" && <Sparkles className="w-4 h-4 text-teal-400" />}
+              {settings.theme === "dark" && <Sun className="w-4 h-4 text-amber-400" />}
+              {settings.theme === "black" && <Lamp className="w-4 h-4 text-emerald-400" />}
             </button>
 
             {chapterList.length > 0 && (
               <button
                 type="button"
                 onClick={() => setChaptersDrawerOpen(true)}
-                className="flex h-9 items-center gap-1 rounded-lg px-2.5 text-xs font-semibold transition hover:bg-black/5 dark:hover:bg-white/10"
+                className="flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold transition hover:bg-black/5 dark:hover:bg-white/10"
                 title="Mục lục chương"
               >
-                <span>☰</span>
+                <List className="w-4 h-4" />
                 <span className="hidden md:inline">Mục lục</span>
               </button>
             )}
@@ -358,10 +319,10 @@ export function ReaderExperience({
             <button
               type="button"
               onClick={() => setSettingsOpen(true)}
-              className="flex h-9 items-center gap-1 rounded-lg px-2.5 text-xs font-semibold transition hover:bg-black/5 dark:hover:bg-white/10"
+              className="flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold transition hover:bg-black/5 dark:hover:bg-white/10"
               title="Cài đặt giao diện"
             >
-              <span>Aa</span>
+              <SlidersHorizontal className="w-3.5 h-3.5" />
               <span className="hidden md:inline">Cài đặt</span>
             </button>
           </div>
@@ -374,15 +335,18 @@ export function ReaderExperience({
           <header className="reader-heading-border border-b pb-6 text-center sm:pb-8">
             <Link
               href={`/truyen/${story.slug}`}
-              className="reader-accent inline-flex items-center gap-1 rounded-full bg-black/5 px-3 py-1 text-xs font-semibold uppercase tracking-wider transition hover:opacity-80 dark:bg-white/10"
+              className="reader-accent inline-flex items-center gap-1.5 rounded-full bg-black/5 px-3 py-1 text-xs font-semibold uppercase tracking-wider transition hover:opacity-80 dark:bg-white/10"
             >
-              <span>📖</span> {story.title}
+              <BookOpen className="w-3.5 h-3.5" /> {story.title}
             </Link>
             <h1 className="mt-4 text-2xl font-bold leading-snug tracking-tight sm:text-3xl">
               Chương {formatChapterNumber(chapter.number)}: {chapter.title}
             </h1>
             <div className="reader-muted mt-3 flex items-center justify-center gap-3 text-xs">
-              <span>{chapter.wordCount.toLocaleString("vi-VN")} chữ</span>
+              <span className="flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5" />
+                <span>{formatReadingTime(chapter.wordCount)}</span>
+              </span>
               <span>•</span>
               <span>{chapter.publishedDate}</span>
             </div>
@@ -404,7 +368,7 @@ export function ReaderExperience({
               className="reader-card group flex flex-col justify-between rounded-2xl border p-4 transition hover:border-teal-600 hover:shadow-md"
             >
               <div className="reader-muted flex items-center gap-1.5 text-xs font-semibold">
-                <span>←</span>
+                <ArrowLeft className="w-3.5 h-3.5" />
                 <span>CHƯƠNG TRƯỚC</span>
               </div>
               <div className="mt-2 font-bold text-sm line-clamp-2 group-hover:text-teal-600">
@@ -424,7 +388,7 @@ export function ReaderExperience({
             >
               <div className="reader-accent flex items-center justify-between text-xs font-bold">
                 <span>CHƯƠNG TIẾP THEO</span>
-                <span>→</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </div>
               <div className="mt-2 font-bold text-sm line-clamp-2 group-hover:text-teal-600">
                 Chương {formatChapterNumber(nextChapter.number)}: {nextChapter.title}
@@ -455,10 +419,12 @@ export function ReaderExperience({
             title="Chương trước"
             aria-label="Chương trước"
           >
-            ←
+            <ArrowLeft className="w-4 h-4" />
           </Link>
         ) : (
-          <span className="flex h-10 min-w-10 items-center justify-center text-sm opacity-30">←</span>
+          <span className="flex h-10 min-w-10 items-center justify-center text-sm opacity-30">
+            <ArrowLeft className="w-4 h-4 opacity-30" />
+          </span>
         )}
 
         {chapterList.length > 0 ? (
@@ -468,7 +434,7 @@ export function ReaderExperience({
             className="flex h-10 items-center gap-1.5 rounded-full px-3 text-xs font-bold transition hover:bg-black/5 active:scale-95 dark:hover:bg-white/10"
             title="Mục lục chương"
           >
-            <span>☰</span>
+            <List className="w-4 h-4" />
             <span>Chương {formatChapterNumber(chapter.number)}</span>
           </button>
         ) : (
@@ -476,7 +442,7 @@ export function ReaderExperience({
             href={`/truyen/${story.slug}`}
             className="flex h-10 items-center gap-1.5 rounded-full px-3 text-xs font-bold transition hover:bg-black/5 active:scale-95 dark:hover:bg-white/10"
           >
-            <span>☰</span>
+            <List className="w-4 h-4" />
             <span>Chương {formatChapterNumber(chapter.number)}</span>
           </Link>
         )}
@@ -487,7 +453,7 @@ export function ReaderExperience({
           className="flex h-10 min-w-10 items-center justify-center rounded-full text-xs font-bold transition hover:bg-black/5 active:scale-95 dark:hover:bg-white/10"
           title="Tùy chỉnh giao diện đọc"
         >
-          Aa
+          <SlidersHorizontal className="w-4 h-4" />
         </button>
 
         <button
@@ -497,11 +463,11 @@ export function ReaderExperience({
           title="Đổi màu theme nhanh"
           aria-label="Đổi màu theme nhanh"
         >
-          {settings.theme === "light" && "🌙"}
-          {settings.theme === "sepia" && "🌘"}
-          {settings.theme === "midnight" && "✨"}
-          {settings.theme === "dark" && "☀️"}
-          {settings.theme === "black" && "💡"}
+          {settings.theme === "light" && <Moon className="w-4 h-4 text-slate-700" />}
+          {settings.theme === "sepia" && <Coffee className="w-4 h-4 text-[#78350f]" />}
+          {settings.theme === "midnight" && <Sparkles className="w-4 h-4 text-teal-400" />}
+          {settings.theme === "dark" && <Sun className="w-4 h-4 text-amber-400" />}
+          {settings.theme === "black" && <Lamp className="w-4 h-4 text-emerald-400" />}
         </button>
 
         <button
@@ -511,7 +477,7 @@ export function ReaderExperience({
           title="Lên đầu trang"
           aria-label="Lên đầu trang"
         >
-          ▲
+          <ChevronUp className="w-4 h-4" />
         </button>
 
         {nextChapter ? (
@@ -521,10 +487,12 @@ export function ReaderExperience({
             title="Chương sau"
             aria-label="Chương sau"
           >
-            →
+            <ArrowRight className="w-4 h-4" />
           </Link>
         ) : (
-          <span className="flex h-10 min-w-10 items-center justify-center text-sm opacity-30">→</span>
+          <span className="flex h-10 min-w-10 items-center justify-center text-sm opacity-30">
+            <ArrowRight className="w-4 h-4 opacity-30" />
+          </span>
         )}
       </div>
 

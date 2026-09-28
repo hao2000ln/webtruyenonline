@@ -37,15 +37,20 @@ export const getHomepageStories = cache(async () => {
 
   // Keep these sequential because one application instance intentionally uses
   // a single pooled database connection.
-  const latestUpdated = await selectStoryCards(published, desc(stories.latestChapterAt));
-  const newest = await selectStoryCards(published, desc(stories.publishedAt));
-  const hot = await selectStoryCards(published, desc(stories.viewCount));
+  const latestUpdated = await selectStoryCards(published, desc(stories.latestChapterAt), 8);
+  const newest = await selectStoryCards(published, desc(stories.publishedAt), 6);
+  const hot = await selectStoryCards(published, desc(stories.viewCount), 10);
   const completed = await selectStoryCards(
     and(published, eq(stories.status, "COMPLETED"))!,
     desc(stories.latestChapterAt),
+    6,
   );
+  const allGenres = await db
+    .select({ id: genres.id, name: genres.name, slug: genres.slug })
+    .from(genres)
+    .orderBy(asc(genres.name));
 
-  return { latestUpdated, newest, hot, completed };
+  return { latestUpdated, newest, hot, completed, allGenres };
 });
 
 export const getStoryDetail = cache(async (slug: string) => {

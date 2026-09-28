@@ -54,6 +54,14 @@ button, select { cursor: pointer; }
 .text-primary-hover{
   color:var(--primary-hover)
 }
+.book-cover-3d {
+  box-shadow: -5px 8px 20px rgba(15, 118, 110, 0.25), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.book-cover-3d:hover {
+  transform: translateY(-4px) rotate(-1deg);
+  box-shadow: -8px 12px 25px rgba(15, 118, 110, 0.35), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
 .site-container {
   width: 100%;
   max-width: 1200px;

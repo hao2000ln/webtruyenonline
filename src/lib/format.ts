@@ -30,3 +30,10 @@ export function formatChapterNumber(value: string) {
   const trimmedDecimal = decimal.replace(/0+$/, "");
   return trimmedDecimal ? `${integer}.${trimmedDecimal}` : integer;
 }
+
+export function formatReadingTime(wordCount: number) {
+  if (!wordCount || wordCount <= 0) return "< 1 phút đọc";
+  const minutes = Math.ceil(wordCount / 220);
+  return `${minutes} phút đọc`;
+}
+

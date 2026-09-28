@@ -1,58 +1,81 @@
 import Link from "next/link";
-import { StoryCover } from "@/components/story/story-cover";
-import { StorySection } from "@/components/story/story-section";
+import { HeroSpotlight } from "@/components/home/hero-spotlight";
+import { FeaturedBookGrid } from "@/components/home/featured-book-grid";
+import { LatestUpdatesFeed } from "@/components/home/latest-updates-feed";
+import { RankingLeaderboard } from "@/components/home/ranking-leaderboard";
+import { CompletedShowcase } from "@/components/home/completed-showcase";
 import { getHomepageStories } from "@/db/queries/stories";
-import { formatCompactNumber } from "@/lib/format";
 
 export const revalidate = 60;
 
 export default async function HomePage() {
-  const { latestUpdated, newest, hot, completed } = await getHomepageStories();
-  const featured = latestUpdated[0];
+  const { latestUpdated, newest, hot, completed, allGenres } =
+    await getHomepageStories();
+  const featured = hot[0] ?? latestUpdated[0] ?? null;
 
   return (
-    <main>
-      <section className="border-b border-ui-border bg-surface">
-        <div className="site-container grid gap-8 py-10 lg:grid-cols-[1fr_360px] lg:items-center lg:py-14">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Thư viện truyện chữ</p>
-            <h1 className="mt-3 max-w-2xl text-[32px] font-bold leading-tight tracking-tight text-content">
-              Một góc yên tĩnh cho những câu chuyện dài.
-            </h1>
-            <p className="mt-5 max-w-xl text-base leading-7 text-content-secondary">
-              Khám phá truyện mới, theo dõi chương vừa cập nhật và tận hưởng trải nghiệm đọc tập trung trên mọi thiết bị.
-            </p>
-            <div className="mt-7 flex flex-wrap gap-3">
-              {featured ? (
-                <Link href={`/truyen/${featured.slug}`} className="button-primary button-lg">
-                  Mộc Thư nổi bật
-                </Link>
-              ) : null}
-              <Link href="/the-loai" className="button-secondary button-lg">
-                Khám phá thể loại
-              </Link>
-            </div>
+    <main className="min-h-screen bg-slate-50/50 pb-16">
+      {/* Hero Spotlight */}
+      <HeroSpotlight featuredStory={featured} genres={allGenres} />
+
+      {/* Main Content Sections */}
+      <div className="site-container py-8 sm:py-10">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+          {/* Main Column */}
+          <div className="space-y-8 lg:col-span-8">
+            <FeaturedBookGrid stories={newest} />
+            <LatestUpdatesFeed stories={latestUpdated} />
+            <CompletedShowcase stories={completed} />
           </div>
 
-          {featured ? (
-            <Link href={`/truyen/${featured.slug}`} className="story-card group grid grid-cols-[112px_1fr] gap-5 shadow-sm">
-              <StoryCover title={featured.title} slug={featured.slug} coverUrl={featured.coverUrl} className="w-28 transition group-hover:opacity-90" />
-              <div className="self-center">
-                <p className="text-xs font-semibold uppercase tracking-wider text-accent">Mới cập nhật</p>
-                <h2 className="mt-2 text-xl font-bold leading-tight text-content group-hover:text-primary">{featured.title}</h2>
-                <p className="mt-2 text-sm text-content-secondary">{featured.authorName ?? "Khuyết danh"}</p>
-                <p className="mt-4 text-xs text-content-muted">{featured.totalChapters} chương · {formatCompactNumber(featured.viewCount)} lượt đọc</p>
-              </div>
-            </Link>
-          ) : null}
-        </div>
-      </section>
+          {/* Sidebar Column */}
+          <aside className="space-y-8 lg:col-span-4">
+            <RankingLeaderboard stories={hot} />
 
-      <div className="site-container grid gap-6 py-10 lg:grid-cols-2">
-        <StorySection title="Mới lên chương" eyebrow="Vừa cập nhật" stories={latestUpdated} />
-        <StorySection title="Truyện mới" eyebrow="Bắt đầu hành trình" stories={newest} />
-        <StorySection title="Được đọc nhiều" eyebrow="Đang được quan tâm" stories={hot} />
-        <StorySection title="Truyện hoàn thành" eyebrow="Đọc trọn bộ" stories={completed} />
+            {/* Genre Navigation Card */}
+            {allGenres.length > 0 && (
+              <div className="rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-xs">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                  <div className="flex items-center gap-2.5">
+                    <span className="h-5 w-1.5 rounded-full bg-[#0f766e]" aria-hidden="true" />
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-[#0f766e] block">
+                        DANH MỤC
+                      </span>
+                      <h2 className="text-base font-bold text-slate-900">Khám phá theo thể loại</h2>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {allGenres.map((genre) => (
+                    <Link
+                      key={genre.id}
+                      href={`/the-loai/${genre.slug}`}
+                      className="rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-teal-200 hover:bg-teal-50 hover:text-[#0f766e]"
+                    >
+                      {genre.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Reading tip card */}
+            <div className="rounded-3xl border border-teal-200/60 bg-gradient-to-br from-teal-500/10 via-emerald-500/5 to-transparent p-5 sm:p-6">
+              <div className="flex items-center gap-2 text-teal-800 text-xs font-bold uppercase tracking-wider">
+                <span>💡</span>
+                <span>Mẹo đọc truyện</span>
+              </div>
+              <h3 className="mt-2 text-sm font-bold text-slate-900">
+                Lưu tiến độ đọc tự động
+              </h3>
+              <p className="mt-1 text-xs text-slate-600 leading-relaxed">
+                Mộc Thư tự động ghi nhớ chương bạn đang đọc dở trên trình duyệt, không cần đăng nhập vẫn tiếp tục đọc mượt mà.
+              </p>
+            </div>
+          </aside>
+        </div>
       </div>
     </main>
   );

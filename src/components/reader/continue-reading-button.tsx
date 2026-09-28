@@ -29,9 +29,10 @@ export function ContinueReadingButton({ storySlug, firstChapterHref }: ContinueR
   return (
     <Link
       href={history?.href ?? firstChapterHref}
-      className="button-primary button-lg"
+      className="flex items-center justify-center gap-2 rounded-xl bg-[#0f766e] px-5 py-3 text-sm font-bold text-white shadow-xs transition hover:bg-[#115e59] active:scale-98" style={{ color: "#fff" }}
     >
-      {history ? `Đọc tiếp chương ${history.chapterNumber}` : "Đọc từ đầu"}
+      <span>📖</span>
+      <span>{history ? `Đọc tiếp chương ${history.chapterNumber}` : "Đọc từ đầu"}</span>
     </Link>
   );
 }

@@ -23,14 +23,6 @@ function Brand() {
   );
 }
 
-function FooterHeading({ children, accent = false }: { children: React.ReactNode; accent?: boolean }) {
-  return (
-    <h2 className={`mb-4 border-l-2 pl-2 text-xs font-semibold uppercase tracking-wider text-white ${accent ? "border-accent" : "border-teal-500"}`}>
-      {children}
-    </h2>
-  );
-}
-
 function SocialPlaceholder({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <span
@@ -45,33 +37,33 @@ function SocialPlaceholder({ label, children }: { label: string; children: React
 
 export function SiteFooter() {
   return (
-    <footer className="mt-16 border-t border-slate-800 bg-slate-900 pb-8 pt-12 text-sm text-slate-300">
+    <footer className="mt-16 border-t border-slate-800 bg-slate-900 pt-12 pb-8 text-sm text-slate-300">
       <div className="site-container">
-        <div className="grid grid-cols-1 gap-8 border-b border-slate-800 pb-10 md:grid-cols-2 lg:grid-cols-4">
-          <section className="space-y-4" aria-label="Giới thiệu Mộc Thư">
+        <div className="grid grid-cols-1 gap-8 pb-10 border-b border-slate-800 md:grid-cols-2 lg:grid-cols-4">
+          {/* Col 1: Brand & Social */}
+          <div className="space-y-4">
             <Brand />
             <p className="text-xs leading-relaxed text-slate-400">
-              Mộc Thư là thư viện truyện chữ trực tuyến với không gian đọc yên tĩnh, tinh tế. Khám phá kho truyện phong phú và các chương mới được cập nhật liên tục.
+              Nền tảng đọc truyện chữ trực tuyến hàng đầu. Không gian đọc yên tĩnh, tinh tế, cập nhật chương mới mỗi ngày.
             </p>
-            <div className="flex flex-wrap items-center gap-3 pt-2 text-xs">
-              <span className="inline-flex items-center gap-1.5 rounded-md border border-slate-700 bg-slate-800 px-2.5 py-1 font-medium text-teal-400">
-                <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3 4.5 6v5.3c0 4.5 3.2 8.3 7.5 9.7 4.3-1.4 7.5-5.2 7.5-9.7V6L12 3Z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m9 12 2 2 4-4" />
-                </svg>
-                Môi trường đọc an toàn
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-md border border-slate-700 bg-slate-800 px-2.5 py-1 font-medium text-amber-500">
-                <svg viewBox="0 0 24 24" className="size-3.5" fill="currentColor" aria-hidden="true">
-                  <path d="M13.2 2.5 5.5 13h5.8l-.5 8.5L18.5 11h-5.8l.5-8.5Z" />
-                </svg>
-                Cập nhật nhanh
-              </span>
+            <div className="flex gap-3 pt-1">
+              <SocialPlaceholder label="Facebook">
+                <svg viewBox="0 0 24 24" className="size-4" fill="currentColor" aria-hidden="true"><path d="M13.5 21v-8h2.8l.4-3h-3.2V8.1c0-.9.3-1.5 1.6-1.5h1.7V3.9c-.8-.1-1.6-.2-2.4-.2-2.4 0-4.1 1.5-4.1 4.2V10H7.5v3h2.8v8h3.2Z" /></svg>
+              </SocialPlaceholder>
+              <SocialPlaceholder label="Discord">
+                <svg viewBox="0 0 24 24" className="size-4" fill="currentColor" aria-hidden="true"><path d="M19.3 5.3A17 17 0 0 0 15 4l-.5 1a15.4 15.4 0 0 0-5 0L9 4a17 17 0 0 0-4.3 1.3C2 9.2 1.3 13 1.7 16.8A17.6 17.6 0 0 0 7 19.5l1.3-1.8-1.8-.9.4-.3c3.4 1.6 7 1.6 10.4 0l.4.3-1.8.9 1.3 1.8a17.6 17.6 0 0 0 5.2-2.7c.5-4.4-.8-8.2-3.1-11.5ZM8.8 14.5c-1 0-1.9-.9-1.9-2s.8-2 1.9-2c1 0 1.9.9 1.9 2s-.9 2-1.9 2Zm6.4 0c-1 0-1.9-.9-1.9-2s.8-2 1.9-2c1 0 1.9.9 1.9 2s-.9 2-1.9 2Z" /></svg>
+              </SocialPlaceholder>
+              <SocialPlaceholder label="Telegram">
+                <svg viewBox="0 0 24 24" className="size-4" fill="currentColor" aria-hidden="true"><path d="m21.4 3.4-3.2 16c-.2 1.1-.9 1.4-1.8.9l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.4-5 9.1-8.2c.4-.4-.1-.6-.6-.2L5.7 13.2.8 11.7c-1.1-.3-1.1-1.1.2-1.6L20 2.8c.9-.3 1.7.2 1.4.6Z" /></svg>
+              </SocialPlaceholder>
             </div>
-          </section>
+          </div>
 
+          {/* Col 2: Khám phá */}
           <nav aria-label="Khám phá">
-            <FooterHeading>Khám phá</FooterHeading>
+            <h3 className="mb-4 border-l-2 border-amber-600 pl-2.5 text-xs font-bold uppercase tracking-wider text-white">
+              Khám phá
+            </h3>
             <ul className="space-y-2.5 text-xs">
               {exploreLinks.map((item) => (
                 <li key={item.href}>
@@ -84,33 +76,45 @@ export function SiteFooter() {
             </ul>
           </nav>
 
-          <section aria-label="Chính sách">
-            <FooterHeading accent>Chính sách</FooterHeading>
+          {/* Col 3: Hỗ trợ độc giả */}
+          <section aria-label="Hỗ trợ">
+            <h3 className="mb-4 border-l-2 border-amber-600 pl-2.5 text-xs font-bold uppercase tracking-wider text-white">
+              Hỗ trợ độc giả
+            </h3>
             <ul className="space-y-2.5 text-xs">
-              {policyLabels.map((label) => <li key={label} className="text-slate-400" title="Sắp cập nhật">{label}</li>)}
+              {policyLabels.map((label) => (
+                <li key={label} className="text-slate-400 transition hover:text-teal-400 cursor-pointer">
+                  {label}
+                </li>
+              ))}
             </ul>
           </section>
 
-          <section aria-label="Kết nối">
-            <FooterHeading>Kết nối</FooterHeading>
-            <p className="mb-4 text-xs leading-relaxed text-slate-400">Các kênh cộng đồng dành cho người yêu văn học sẽ sớm được cập nhật.</p>
-            <div className="flex gap-3">
-              <SocialPlaceholder label="Facebook">
-                <svg viewBox="0 0 24 24" className="size-4" fill="currentColor" aria-hidden="true"><path d="M13.5 21v-8h2.8l.4-3h-3.2V8.1c0-.9.3-1.5 1.6-1.5h1.7V3.9c-.8-.1-1.6-.2-2.4-.2-2.4 0-4.1 1.5-4.1 4.2V10H7.5v3h2.8v8h3.2Z" /></svg>
-              </SocialPlaceholder>
-              <SocialPlaceholder label="Discord">
-                <svg viewBox="0 0 24 24" className="size-4" fill="currentColor" aria-hidden="true"><path d="M19.3 5.3A17 17 0 0 0 15 4l-.5 1a15.4 15.4 0 0 0-5 0L9 4a17 17 0 0 0-4.3 1.3C2 9.2 1.3 13 1.7 16.8A17.6 17.6 0 0 0 7 19.5l1.3-1.8-1.8-.9.4-.3c3.4 1.6 7 1.6 10.4 0l.4.3-1.8.9 1.3 1.8a17.6 17.6 0 0 0 5.2-2.7c.5-4.4-.8-8.2-3.1-11.5ZM8.8 14.5c-1 0-1.9-.9-1.9-2s.8-2 1.9-2c1 0 1.9.9 1.9 2s-.9 2-1.9 2Zm6.4 0c-1 0-1.9-.9-1.9-2s.8-2 1.9-2c1 0 1.9.9 1.9 2s-.9 2-1.9 2Z" /></svg>
-              </SocialPlaceholder>
-              <SocialPlaceholder label="Telegram">
-                <svg viewBox="0 0 24 24" className="size-4" fill="currentColor" aria-hidden="true"><path d="m21.4 3.4-3.2 16c-.2 1.1-.9 1.4-1.8.9l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.4-5 9.1-8.2c.4-.4-.1-.6-.6-.2L5.7 13.2.8 11.7c-1.1-.3-1.1-1.1.2-1.6L20 2.8c.9-.3 1.7.2 1.4.6Z" /></svg>
-              </SocialPlaceholder>
-            </div>
+          {/* Col 4: Ứng dụng di động */}
+          <section aria-label="Ứng dụng di động">
+            <h3 className="mb-4 border-l-2 border-amber-600 pl-2.5 text-xs font-bold uppercase tracking-wider text-white">
+              Ứng dụng di động
+            </h3>
+            <p className="mb-3 text-xs leading-relaxed text-slate-400">
+              Trải nghiệm đọc truyện mượt mà, tối ưu pin và hỗ trợ đọc offline trên điện thoại.
+            </p>
+            <Link
+              href="/"
+              className="flex items-center justify-center gap-2 rounded-xl bg-[#0f766e] px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-[#115e59]"
+            >
+              <span>📱</span>
+              <span>Ứng dụng Mộc Thư</span>
+            </Link>
           </section>
         </div>
 
         <div className="flex flex-col items-center justify-between pt-6 text-center text-xs text-slate-500 sm:flex-row sm:text-left">
           <p>© 2026 Mộc Thư. Tất cả các quyền được bảo lưu.</p>
-          <p className="mt-3 sm:mt-0">Thiết kế tinh tế dành cho người yêu chữ.</p>
+          <div className="mt-3 sm:mt-0 flex gap-4">
+            <Link href="/" className="hover:text-slate-300">Điều khoản sử dụng</Link>
+            <span>•</span>
+            <Link href="/" className="hover:text-slate-300">Chính sách riêng tư</Link>
+          </div>
         </div>
       </div>
     </footer>

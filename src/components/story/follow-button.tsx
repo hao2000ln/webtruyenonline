@@ -59,15 +59,18 @@ export function FollowButton({ storySlug }: { storySlug: string }) {
         ? "Có lỗi"
         : "Theo dõi";
 
+  const icon = state === "following" ? "❤️" : "🤍";
+
   return (
     <button
       type="button"
       onClick={toggleFollow}
       disabled={state === "loading" || state === "error"}
       aria-pressed={state === "following"}
-      className={state === "following" ? "button-primary button-lg" : "button-secondary button-lg"}
+      className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-xs transition hover:bg-slate-50 active:scale-98 disabled:opacity-50"
     >
-      {label}
+      <span>{icon}</span>
+      <span>{label}</span>
     </button>
   );
 }
