@@ -10,7 +10,7 @@ import {
   StorySlugConflictError,
   updateAdminStory,
 } from "../src/db/mutations/admin-stories";
-import { getAdminStories, getAdminStoryForEdit } from "../src/db/queries/admin-stories";
+import { ADMIN_STORIES_PAGE_SIZE, getAdminStories, getAdminStoryForEdit } from "../src/db/queries/admin-stories";
 import { getStoryDetail } from "../src/db/queries/stories";
 import { authors, chapters, genres, stories, storyGenres } from "../src/db/schema";
 import { isAdminUser } from "../src/lib/auth/roles";
@@ -71,7 +71,7 @@ try {
 
   const list = await getAdminStories({ query: titlePrefix, status: "", requestedPage: 1 });
   assert.equal(list.total, 25);
-  assert.equal(list.stories.length, 20);
+  assert.equal(list.stories.length, ADMIN_STORIES_PAGE_SIZE);
   assert.ok(list.stories.every((story) => story.title && "totalChapters" in story && "viewCount" in story));
   pass("TC01", "list trả dữ liệu thật và đủ cột");
 
@@ -91,9 +91,9 @@ try {
   pass("TC04", "filter status đúng");
 
   const secondPage = await getAdminStories({ query: titlePrefix, status: "", requestedPage: 2 });
-  assert.equal(secondPage.totalPages, 2);
+  assert.equal(secondPage.totalPages, Math.ceil(25 / ADMIN_STORIES_PAGE_SIZE));
   assert.equal(secondPage.page, 2);
-  assert.equal(secondPage.stories.length, 5);
+  assert.equal(secondPage.stories.length, Math.min(ADMIN_STORIES_PAGE_SIZE, 25 - ADMIN_STORIES_PAGE_SIZE));
   pass("TC05", "pagination server-side đúng");
 
   await assert.rejects(() => createAdminStory(targetInput), StorySlugConflictError);

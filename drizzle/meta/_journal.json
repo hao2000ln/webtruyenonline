@@ -29,6 +29,13 @@
       "when": 1790591056266,
       "tag": "0003_user_self_service_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790600000000,
+      "tag": "0004_story_cover_storage",
+      "breakpoints": true
     }
   ]
 }

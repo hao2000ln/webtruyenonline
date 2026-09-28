@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import type Quill from "quill";
 import type { ChapterFormState } from "@/app/admin/(dashboard)/chapters/actions";
+import { countChapterWords, sanitizeChapterContent } from "@/lib/chapter-content";
 
 type Values = { storyId: string; chapterNumber: string; title: string; slug: string; content: string; isPublished: boolean; publishedAt: Date | null };
 type Props = { action: (state: ChapterFormState, formData: FormData) => Promise<ChapterFormState>; stories: Array<{ id: string; title: string }>; chapter?: Values };
@@ -28,15 +29,31 @@ export function ChapterForm({ action, stories, chapter }: Props) {
   const [content, setContent] = useState(chapter?.content ?? "");
   const [preview, setPreview] = useState(false);
   const [dirty, setDirty] = useState(false);
-  const wordCount = content.trim() ? content.trim().split(/\s+/u).length : 0;
+  const sanitizedPreview = useMemo(() => sanitizeChapterContent(content), [content]);
+  const wordCount = useMemo(() => countChapterWords(content), [content]);
   const editorRef = useRef<HTMLDivElement>(null);
   const quillRef = useRef<Quill | null>(null);
 
   useEffect(() => {
     if (!dirty) return;
     const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ""; };
+    const warnInternalNavigation = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      const anchor = (event.target as Element | null)?.closest<HTMLAnchorElement>("a[href]");
+      if (!anchor || anchor.target === "_blank") return;
+      const destination = new URL(anchor.href, window.location.href);
+      if (destination.origin !== window.location.origin || destination.href === window.location.href) return;
+      if (!window.confirm("Bạn có thay đổi chưa lưu. Bạn có chắc muốn rời trang?")) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
     window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
+    document.addEventListener("click", warnInternalNavigation, true);
+    return () => {
+      window.removeEventListener("beforeunload", warn);
+      document.removeEventListener("click", warnInternalNavigation, true);
+    };
   }, [dirty]);
 
   useEffect(() => {
@@ -73,7 +90,7 @@ export function ChapterForm({ action, stories, chapter }: Props) {
   }, []);
 
   return (
-    <form action={formAction} onSubmit={() => setDirty(false)} className="mt-8 space-y-6">
+    <form action={formAction} onChange={() => setDirty(true)} className="mt-8 space-y-6">
       {state.message ? <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{state.message}</p> : null}
       <section className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
         <h2 className="text-lg font-bold text-slate-950">Thông tin chương</h2>
@@ -82,7 +99,7 @@ export function ChapterForm({ action, stories, chapter }: Props) {
           <div><label htmlFor="chapterNumber" className="text-sm font-semibold text-slate-700">Số chương *</label><input id="chapterNumber" name="chapterNumber" required inputMode="decimal" pattern="\d+(?:\.\d{1,3})?" defaultValue={chapter?.chapterNumber} className={inputClass} /><ErrorText value={state.fieldErrors?.chapterNumber} /></div>
           <div><label htmlFor="title" className="text-sm font-semibold text-slate-700">Tiêu đề *</label><input id="title" name="title" required maxLength={500} value={title} onChange={(event) => { setDirty(true); setTitle(event.target.value); if (!slugTouched) setSlug(slugify(event.target.value)); }} className={inputClass} /><ErrorText value={state.fieldErrors?.title} /></div>
           <div className="sm:col-span-2"><label htmlFor="slug" className="text-sm font-semibold text-slate-700">Slug *</label><input id="slug" name="slug" required maxLength={500} pattern="[a-z0-9]+(?:-[a-z0-9]+)*" value={slug} onChange={(event) => { setSlugTouched(true); setSlug(event.target.value); }} className={inputClass} /><p className="mt-1 text-xs text-slate-500">Tự tạo từ tiêu đề, admin có thể chỉnh lại.</p><ErrorText value={state.fieldErrors?.slug} /></div>
-          <div className="sm:col-span-2"><div className="flex flex-wrap items-center justify-between gap-3"><label htmlFor="content-editor" className="text-sm font-semibold text-slate-700">Nội dung *</label><div className="flex items-center gap-3"><span className="text-xs text-slate-500">{wordCount.toLocaleString("vi-VN")} từ</span><button type="button" onClick={() => setPreview((value) => !value)} className="text-xs font-semibold text-teal-700 hover:underline">{preview ? "Chỉnh sửa" : "Xem trước"}</button></div></div>{preview ? <div className="chapter-preview mt-2 min-h-[300px] rounded-lg border border-slate-200 bg-slate-50 px-4 py-4 text-[15px] leading-7 text-slate-700" dangerouslySetInnerHTML={{ __html: content || "<p class='text-slate-400'>Chưa có nội dung để xem trước.</p>" }} /> : <div id="content-editor" ref={editorRef} className="chapter-quill mt-2 overflow-hidden rounded-lg border border-slate-300 bg-white" />}<input type="hidden" name="content" value={content} /><ErrorText value={state.fieldErrors?.content} /></div>
+          <div className="sm:col-span-2"><div className="flex flex-wrap items-center justify-between gap-3"><label htmlFor="content-editor" className="text-sm font-semibold text-slate-700">Nội dung *</label><div className="flex items-center gap-3"><span className="text-xs text-slate-500">{wordCount.toLocaleString("vi-VN")} từ</span><button type="button" onClick={() => setPreview((value) => !value)} className="text-xs font-semibold text-teal-700 hover:underline">{preview ? "Chỉnh sửa" : "Xem trước"}</button></div></div><div id="content-editor" ref={editorRef} className={`chapter-quill mt-2 overflow-hidden rounded-lg border border-slate-300 bg-white ${preview ? "hidden" : ""}`} />{preview ? <div className="chapter-preview mt-2 min-h-[300px] rounded-lg border border-slate-200 bg-slate-50 px-4 py-4 text-[15px] leading-7 text-slate-700">{sanitizedPreview ? <div dangerouslySetInnerHTML={{ __html: sanitizedPreview }} /> : <p className="text-slate-400">Chưa có nội dung để xem trước.</p>}</div> : null}<input type="hidden" name="content" value={content} /><ErrorText value={state.fieldErrors?.content} /></div>
           <div><label htmlFor="publishedAt" className="text-sm font-semibold text-slate-700">Ngày xuất bản</label><input id="publishedAt" name="publishedAt" type="datetime-local" defaultValue={localDate(chapter?.publishedAt)} className={inputClass} /><ErrorText value={state.fieldErrors?.publishedAt} /></div>
           <label className="flex items-center gap-3 self-end pb-3"><input type="checkbox" name="isPublished" defaultChecked={chapter?.isPublished} className="size-4 accent-teal-700" /><span className="font-semibold text-slate-800">Xuất bản chương</span></label>
         </div>

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ReaderExperience } from "@/components/reader/reader-experience";
+import { recordChapterView } from "@/db/mutations/public-views";
 import { getChapterForReader } from "@/db/queries/stories";
+import { sanitizeChapterContent } from "@/lib/chapter-content";
 import { formatChapterNumber, formatDate } from "@/lib/format";
 
 type Props = { params: Promise<{ slug: string; chapter: string }> };
@@ -30,8 +32,9 @@ export default async function ChapterPage({ params }: Props) {
   const data = chapterPathNumber ? await getChapterForReader(slug, chapterPathNumber) : null;
 
   if (!data) notFound();
+  await recordChapterView(data.story.id, data.chapter.id);
 
-  const paragraphs = data.chapter.content
+  const paragraphs = sanitizeChapterContent(data.chapter.content)
     .split(/\n\s*\n/u)
     .map((paragraph) => paragraph.trim())
     .filter(Boolean);
@@ -48,6 +51,7 @@ export default async function ChapterPage({ params }: Props) {
       paragraphs={paragraphs}
       previousChapter={data.previousChapter}
       nextChapter={data.nextChapter}
+      chapterList={data.chapterList}
     />
   );
 }

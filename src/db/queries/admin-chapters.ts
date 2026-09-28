@@ -40,7 +40,7 @@ export async function getAdminChapterForEdit(id: string) {
   const [chapter] = await db.select({
     id: chapters.id, storyId: chapters.storyId, chapterNumber: chapters.chapterNumber,
     title: chapters.title, slug: chapters.slug, content: chapters.content,
-    isPublished: chapters.isPublished, publishedAt: chapters.publishedAt,
+    wordCount: chapters.wordCount, isPublished: chapters.isPublished, publishedAt: chapters.publishedAt,
   }).from(chapters).where(eq(chapters.id, id)).limit(1);
   return chapter ?? null;
 }

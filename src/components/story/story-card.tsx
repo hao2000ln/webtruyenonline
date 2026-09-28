@@ -10,6 +10,7 @@ export function StoryCard({ story }: { story: StoryCardData }) {
         <StoryCover
           title={story.title}
           slug={story.slug}
+          coverUrl={story.coverUrl}
           className="h-[110px] w-20 transition group-hover:opacity-90"
         />
       </Link>

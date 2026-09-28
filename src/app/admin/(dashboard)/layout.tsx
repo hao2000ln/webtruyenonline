@@ -17,8 +17,8 @@ export default async function AdminDashboardLayout({
   const user = await requireAdmin();
 
   return (
-    <div className="min-h-screen bg-slate-100 lg:grid lg:grid-cols-[260px_minmax(0,1fr)]">
-      <aside className="hidden border-r border-slate-200 bg-white lg:flex lg:min-h-screen lg:flex-col">
+    <div className="min-h-screen bg-slate-100 lg:pl-[260px]">
+      <aside className="hidden border-r border-slate-200 bg-white lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:w-[260px] lg:flex-col">
         <div className="border-b border-slate-200 px-6 py-5">
           <Link href="/admin" className="flex items-center gap-3" aria-label="Mộc Thư Admin">
             <span className="flex size-10 items-center justify-center rounded-lg bg-teal-700 text-lg font-bold text-white">M</span>
@@ -29,7 +29,7 @@ export default async function AdminDashboardLayout({
           </Link>
         </div>
 
-        <div className="flex-1 px-4 py-5">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5">
           <AdminNav />
         </div>
 
@@ -43,7 +43,7 @@ export default async function AdminDashboardLayout({
       </aside>
 
       <div className="min-w-0">
-        <header className="border-b border-slate-200 bg-white">
+        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/85">
           <div className="flex min-h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3">
               <span className="flex size-9 items-center justify-center rounded-lg bg-teal-700 font-bold text-white lg:hidden">M</span>

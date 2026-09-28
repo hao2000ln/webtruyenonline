@@ -15,7 +15,11 @@ function invalid(error: z.ZodError<AdminChapterInput>): ChapterFormState {
 
 function refresh() {
   revalidatePath("/");
+  revalidatePath("/admin");
   revalidatePath("/admin/chapters");
+  revalidatePath("/admin/stories");
+  revalidatePath("/tim-kiem");
+  revalidatePath("/the-loai/[slug]", "page");
   revalidatePath("/truyen/[slug]", "page");
   revalidatePath("/truyen/[slug]/[chapter]", "page");
 }

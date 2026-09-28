@@ -95,5 +95,14 @@ export async function deleteAdminStory(id: string) {
   const existing = await getAdminStoryForEdit(id);
   if (!existing) return null;
   await db.delete(stories).where(eq(stories.id, id));
-  return { id, slug: existing.slug };
+  return { id, slug: existing.slug, coverUrl: existing.coverUrl };
+}
+
+export async function setAdminStoryCover(id: string, coverUrl: string | null) {
+  const [story] = await db
+    .update(stories)
+    .set({ coverUrl, updatedAt: new Date() })
+    .where(eq(stories.id, id))
+    .returning({ id: stories.id });
+  return story ?? null;
 }

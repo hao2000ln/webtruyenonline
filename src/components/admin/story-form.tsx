@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import type { StoryFormState } from "@/app/admin/(dashboard)/stories/actions";
+import { StoryCoverUpload } from "@/components/admin/story-cover-upload";
 import type { AdminStoryStatus } from "@/db/queries/admin-stories";
 
 const initialStoryFormState: StoryFormState = {};
@@ -39,6 +40,7 @@ function FieldError({ errors }: { errors?: string[] }) {
 
 export function StoryForm({ action, authors, genres, story }: StoryFormProps) {
   const [state, formAction, pending] = useActionState(action, initialStoryFormState);
+  const [coverProcessing, setCoverProcessing] = useState(false);
 
   return (
     <form action={formAction} className="mt-8 space-y-6">
@@ -85,8 +87,9 @@ export function StoryForm({ action, authors, genres, story }: StoryFormProps) {
             <FieldError errors={state.fieldErrors?.status} />
           </div>
           <div className="sm:col-span-2">
-            <label htmlFor="coverUrl" className="text-sm font-semibold text-slate-700">URL ảnh bìa</label>
-            <input id="coverUrl" name="coverUrl" type="url" maxLength={2000} defaultValue={story?.coverUrl ?? ""} className={inputClass} />
+            <label htmlFor="coverFile" className="text-sm font-semibold text-slate-700">Ảnh bìa</label>
+            <input type="hidden" name="coverUrl" value="" />
+            <StoryCoverUpload existingCover={story?.coverUrl} onProcessingChange={setCoverProcessing} />
             <FieldError errors={state.fieldErrors?.coverUrl} />
           </div>
           <div className="sm:col-span-2">
@@ -121,8 +124,8 @@ export function StoryForm({ action, authors, genres, story }: StoryFormProps) {
 
       <div className="flex flex-wrap justify-end gap-3">
         <Link href="/admin/stories" className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700">Hủy</Link>
-        <button type="submit" disabled={pending} className="rounded-lg bg-teal-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800 disabled:cursor-wait disabled:opacity-60">
-          {pending ? "Đang lưu…" : story ? "Lưu thay đổi" : "Tạo truyện"}
+        <button type="submit" disabled={pending || coverProcessing} className="rounded-lg bg-teal-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800 disabled:cursor-wait disabled:opacity-60">
+          {coverProcessing ? "Đang xử lý ảnh…" : pending ? "Đang lưu…" : story ? "Lưu thay đổi" : "Tạo truyện"}
         </button>
       </div>
     </form>

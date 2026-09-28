@@ -3,17 +3,23 @@ export const READER_SETTINGS_EVENT = "moc-thu:reader-settings-updated";
 export const GUEST_HISTORY_KEY = "moc-thu:guest-history:v1";
 export const GUEST_HISTORY_EVENT = "moc-thu:guest-history-updated";
 
-export type ReaderTheme = "light" | "sepia" | "dark" | "black";
+export type ReaderTheme = "light" | "sepia" | "midnight" | "dark" | "black";
+export type ReaderFontFamily = "sans" | "serif";
+export type ReaderTextAlign = "left" | "justify";
 
 export const READER_FONT_SIZES = [16, 18, 20, 22, 24, 26] as const;
 export const READER_LINE_HEIGHTS = [1.5, 1.7, 1.9, 2.1] as const;
 export const READER_CONTENT_WIDTHS = [640, 760, 880] as const;
+export const READER_FONT_FAMILIES = ["sans", "serif"] as const;
+export const READER_TEXT_ALIGNS = ["left", "justify"] as const;
 
 export type ReaderSettings = {
   fontSize: number;
   lineHeight: number;
   contentWidth: number;
   theme: ReaderTheme;
+  fontFamily: ReaderFontFamily;
+  textAlign: ReaderTextAlign;
 };
 
 export type GuestHistoryRecord = {
@@ -30,9 +36,13 @@ export const DEFAULT_READER_SETTINGS: ReaderSettings = {
   lineHeight: 1.9,
   contentWidth: 760,
   theme: "light",
+  fontFamily: "sans",
+  textAlign: "left",
 };
 
-const themes: ReaderTheme[] = ["light", "sepia", "dark", "black"];
+const themes: ReaderTheme[] = ["light", "sepia", "midnight", "dark", "black"];
+const fontFamilies: ReaderFontFamily[] = ["sans", "serif"];
+const textAligns: ReaderTextAlign[] = ["left", "justify"];
 const MAX_HISTORY_ITEMS = 50;
 
 function getStorage(storage?: Storage) {
@@ -61,6 +71,12 @@ export function sanitizeReaderSettings(value: unknown): ReaderSettings {
     theme: typeof candidate.theme === "string" && themes.includes(candidate.theme as ReaderTheme)
       ? candidate.theme as ReaderTheme
       : DEFAULT_READER_SETTINGS.theme,
+    fontFamily: typeof candidate.fontFamily === "string" && fontFamilies.includes(candidate.fontFamily as ReaderFontFamily)
+      ? candidate.fontFamily as ReaderFontFamily
+      : DEFAULT_READER_SETTINGS.fontFamily,
+    textAlign: typeof candidate.textAlign === "string" && textAligns.includes(candidate.textAlign as ReaderTextAlign)
+      ? candidate.textAlign as ReaderTextAlign
+      : DEFAULT_READER_SETTINGS.textAlign,
   };
 }
 

@@ -36,7 +36,7 @@ export default async function HomePage() {
 
           {featured ? (
             <Link href={`/truyen/${featured.slug}`} className="story-card group grid grid-cols-[112px_1fr] gap-5 shadow-sm">
-              <StoryCover title={featured.title} slug={featured.slug} className="w-28 transition group-hover:opacity-90" />
+              <StoryCover title={featured.title} slug={featured.slug} coverUrl={featured.coverUrl} className="w-28 transition group-hover:opacity-90" />
               <div className="self-center">
                 <p className="text-xs font-semibold uppercase tracking-wider text-accent">Mới cập nhật</p>
                 <h2 className="mt-2 text-xl font-bold leading-tight text-content group-hover:text-primary">{featured.title}</h2>

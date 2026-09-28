@@ -121,9 +121,10 @@ button, select { cursor: pointer; }
 .badge-success { background: #dcfce7; color: #166534; }
 
 .reader-content {
-  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+  font-family: var(--reader-font-family, var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
   font-size: var(--reader-font-size, 20px);
   line-height: var(--reader-line-height, 1.9);
+  text-align: var(--reader-text-align, left);
 }
 .reader-content p + p { margin-top: 1.35em; }
 .reader-content > div + div { margin-top: 1.35em; }
@@ -137,44 +138,82 @@ button, select { cursor: pointer; }
 .reader-container { width: 100%; max-width: min(var(--reader-content-width, 760px), 100%); }
 
 .reader-shell {
-  --reader-page: #ffffff;
+  --reader-page: #f8fafc;
   --reader-paper: #ffffff;
-  --reader-text: #292524;
-  --reader-muted: #78716c;
-  --reader-border: #e7e5e4;
+  --reader-text: #1e293b;
+  --reader-muted: #64748b;
+  --reader-border: #e2e8f0;
   --reader-accent: #0f766e;
+  --reader-card: #f1f5f9;
   background: var(--reader-page);
   color: var(--reader-text);
 }
 .reader-shell[data-reader-theme="sepia"] {
-  --reader-page: #f4ecd8;
+  --reader-page: #ede3cb;
   --reader-paper: #f4ecd8;
   --reader-text: #463f32;
   --reader-muted: #766b57;
   --reader-border: #d8ccb3;
+  --reader-accent: #b45309;
+  --reader-card: #e8ddc4;
+}
+.reader-shell[data-reader-theme="midnight"] {
+  --reader-page: #060c18;
+  --reader-paper: #0f172a;
+  --reader-text: #e2e8f0;
+  --reader-muted: #94a3b8;
+  --reader-border: #1e293b;
+  --reader-accent: #38bdf8;
+  --reader-card: #162036;
 }
 .reader-shell[data-reader-theme="dark"] {
-  --reader-page: #18181b;
+  --reader-page: #111113;
   --reader-paper: #18181b;
   --reader-text: #d4d4d8;
   --reader-muted: #a1a1aa;
   --reader-border: #3f3f46;
   --reader-accent: #5eead4;
+  --reader-card: #27272a;
 }
 .reader-shell[data-reader-theme="black"] {
   --reader-page: #000000;
-  --reader-paper: #000000;
+  --reader-paper: #0a0a0a;
   --reader-text: #d4d4d4;
   --reader-muted: #a3a3a3;
   --reader-border: #262626;
   --reader-accent: #5eead4;
+  --reader-card: #141414;
 }
-.reader-paper, .reader-settings-panel { border-color: var(--reader-border); background: var(--reader-paper); color: var(--reader-text); }
+
+.reader-shell[data-reader-font="sans"] {
+  --reader-font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+.reader-shell[data-reader-font="serif"] {
+  --reader-font-family: "Merriweather", "Lora", "Georgia", "Palatino Linotype", "Book Antiqua", Palatino, serif;
+}
+
+.reader-paper {
+  border-color: var(--reader-border);
+  background: var(--reader-paper);
+  color: var(--reader-text);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+}
+.reader-topbar {
+  border-color: var(--reader-border);
+  background: color-mix(in srgb, var(--reader-paper) 90%, transparent);
+  color: var(--reader-text);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+.reader-card {
+  border-color: var(--reader-border);
+  background: var(--reader-card);
+  color: var(--reader-text);
+}
 .reader-heading-border { border-color: var(--reader-border); }
 .reader-muted { color: var(--reader-muted); }
 .reader-accent { color: var(--reader-accent); }
-.reader-disabled { color: var(--reader-muted); font-size: 14px; opacity: 0.45; }
-.reader-settings-choice { border-color: var(--reader-border); color: var(--reader-text); }
+.reader-disabled { color: var(--reader-muted); font-size: 14px; opacity: 0.4; }
+.reader-settings-choice { border-color: var(--reader-border); color: var(--reader-text); background: var(--reader-paper); }
 
 .reader-outline-button,
 .reader-primary-button {
@@ -186,13 +225,45 @@ button, select { cursor: pointer; }
   padding-inline: 16px;
   font-size: 14px;
   font-weight: 600;
-  transition: opacity 150ms ease;
+  transition: opacity 150ms ease, transform 100ms ease;
+  user-select: none;
 }
 .reader-outline-button { border: 1px solid var(--reader-border); background: var(--reader-paper); color: var(--reader-text); }
 .reader-primary-button { border: 1px solid var(--reader-accent); background: var(--reader-accent); color: #ffffff; }
-.reader-outline-button:hover, .reader-primary-button:hover { opacity: 0.8; }
+.reader-outline-button:hover, .reader-primary-button:hover { opacity: 0.85; }
+.reader-outline-button:active, .reader-primary-button:active { transform: scale(0.98); }
+
+/* Floating Bar & Bottom Sheet UX */
+.reader-floating-bar {
+  border-color: var(--reader-border);
+  background: var(--reader-paper);
+  color: var(--reader-text);
+  box-shadow: 0 12px 36px -4px rgba(0, 0, 0, 0.3), 0 0 1px 1px var(--reader-border);
+}
+
+.reader-bottom-sheet {
+  background: var(--reader-paper);
+  color: var(--reader-text);
+  border-color: var(--reader-border);
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUpFade 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
 
 @media (max-width: 767px) {
   .site-container { padding-inline: 16px; }
   .panel { padding: 16px; }
+  .reader-paper { border-inline: none; border-radius: 0; }
 }

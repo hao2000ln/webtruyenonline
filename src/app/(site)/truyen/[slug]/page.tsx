@@ -73,7 +73,7 @@ export default async function StoryDetailPage({ params, searchParams }: Props) {
       </nav>
 
       <section className="panel grid gap-7 sm:grid-cols-[220px_1fr]">
-        <StoryCover title={story.title} slug={story.slug} className="mx-auto w-[180px] sm:mx-0 sm:w-[220px]" />
+        <StoryCover title={story.title} slug={story.slug} coverUrl={story.coverUrl} className="mx-auto w-[180px] sm:mx-0 sm:w-[220px]" />
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <span className={`badge ${story.status === "COMPLETED" ? "badge-success" : story.status === "HIATUS" ? "badge-accent" : "badge-primary"}`}>{getStoryStatusLabel(story.status)}</span>

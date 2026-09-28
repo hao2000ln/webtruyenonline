@@ -230,10 +230,17 @@ export const getChapterForReader = cache(async (storySlug: string, chapterNumber
     .orderBy(asc(chapters.chapterNumber))
     .limit(1);
 
+  const chapterList = await db
+    .select({ number: chapters.chapterNumber, title: chapters.title })
+    .from(chapters)
+    .where(and(eq(chapters.storyId, story.id), eq(chapters.isPublished, true)))
+    .orderBy(asc(chapters.chapterNumber));
+
   return {
     story,
     chapter,
     previousChapter: previousChapter ?? null,
     nextChapter: nextChapter ?? null,
+    chapterList,
   };
 });

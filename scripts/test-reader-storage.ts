@@ -35,7 +35,14 @@ function historyRecord(storySlug: string, chapterNumber: string): GuestHistoryRe
 const storage = new MemoryStorage();
 
 assert.deepEqual(readReaderSettings(storage), DEFAULT_READER_SETTINGS);
-const customSettings = { fontSize: 24, lineHeight: 2.1, contentWidth: 880, theme: "dark" as const };
+const customSettings = {
+  fontSize: 24,
+  lineHeight: 2.1,
+  contentWidth: 880,
+  theme: "dark" as const,
+  fontFamily: "serif" as const,
+  textAlign: "justify" as const,
+};
 writeReaderSettings(customSettings, storage);
 assert.deepEqual(readReaderSettings(storage), customSettings);
 

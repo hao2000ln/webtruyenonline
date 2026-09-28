@@ -1,21 +1,10 @@
 import { and, count, eq, max } from "drizzle-orm";
 import { db } from "@/db";
 import { chapters, stories } from "@/db/schema";
+import { countChapterWords, sanitizeChapterContent } from "@/lib/chapter-content";
 import type { AdminChapterInput } from "@/lib/validation/admin-chapter";
 
 export class ChapterConflictError extends Error {}
-
-function countWords(content: string) {
-  const text = content.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").trim();
-  return text ? text.split(/\s+/u).length : 0;
-}
-
-function sanitizeContent(content: string) {
-  return content
-    .replace(/<\s*(script|style)[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi, "")
-    .replace(/\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, "")
-    .replace(/javascript\s*:/gi, "");
-}
 
 function isUniqueViolation(error: unknown) {
   let current: unknown = error;
@@ -39,9 +28,10 @@ async function syncStoryAggregates(transaction: Parameters<Parameters<typeof db.
 export async function createAdminChapter(input: AdminChapterInput) {
   try {
     return await db.transaction(async (transaction) => {
+      const sanitizedContent = sanitizeChapterContent(input.content);
       const [chapter] = await transaction.insert(chapters).values({
         storyId: input.storyId, chapterNumber: input.chapterNumber, title: input.title,
-        slug: input.slug, content: sanitizeContent(input.content), wordCount: countWords(input.content),
+        slug: input.slug, content: sanitizedContent, wordCount: countChapterWords(sanitizedContent),
         isPublished: input.isPublished, publishedAt: publishedDate(input),
       }).returning({ id: chapters.id, storyId: chapters.storyId });
       await syncStoryAggregates(transaction, input.storyId);
@@ -58,9 +48,10 @@ export async function updateAdminChapter(id: string, input: AdminChapterInput) {
   if (!existing) return null;
   try {
     return await db.transaction(async (transaction) => {
+      const sanitizedContent = sanitizeChapterContent(input.content);
       const [chapter] = await transaction.update(chapters).set({
         storyId: input.storyId, chapterNumber: input.chapterNumber, title: input.title,
-        slug: input.slug, content: sanitizeContent(input.content), wordCount: countWords(input.content),
+        slug: input.slug, content: sanitizedContent, wordCount: countChapterWords(sanitizedContent),
         isPublished: input.isPublished, publishedAt: publishedDate(input), updatedAt: new Date(),
       }).where(eq(chapters.id, id)).returning({ id: chapters.id, storyId: chapters.storyId });
       await syncStoryAggregates(transaction, existing.storyId);
