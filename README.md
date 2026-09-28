@@ -1,6 +1,6 @@
 # Story Web
 
-MVP web đọc truyện chữ dùng Next.js + Supabase PostgreSQL + Drizzle.
+MVP web Mộc Thư dùng Next.js + Supabase PostgreSQL + Drizzle.
 
 ## 1. Yêu cầu môi trường
 
@@ -40,7 +40,7 @@ cp .env.example .env.local
 ```env
 DATABASE_URL=
 NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 

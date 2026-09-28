@@ -7,7 +7,7 @@
 
 ## 1. Mục tiêu dự án
 
-Xây dựng website đọc truyện chữ tiếng Việt, tham khảo mô hình nội dung của WebNovel.vn nhưng không sao chép giao diện.
+Xây dựng website Mộc Thư chữ tiếng Việt, tham khảo mô hình nội dung của WebNovel.vn nhưng không sao chép giao diện.
 
 Core flow:
 
@@ -1013,7 +1013,7 @@ Reader cần tải nhanh và ít distraction.
 
 ## 26. Mobile-first
 
-Web đọc truyện dự kiến có lượng mobile lớn.
+Web Mộc Thư dự kiến có lượng mobile lớn.
 
 Ưu tiên:
 
@@ -1268,7 +1268,7 @@ Reader
 
 ```text
 Next.js fullstack + Supabase PostgreSQL + Drizzle
-→ xây web đọc truyện chữ tối ưu Reader + SEO
+→ xây web Mộc Thư chữ tối ưu Reader + SEO
 → chạy free-tier trước
 → chỉ tách backend / thêm cache khi traffic thực sự yêu cầu.
 ```

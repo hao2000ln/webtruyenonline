@@ -11,6 +11,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "test:reader-storage": "node --import tsx scripts/test-reader-storage.ts",
+    "db:check": "node --env-file=.env.local scripts/check-db.mjs",
+    "db:seed": "node --env-file=.env.local --import tsx scripts/seed-db.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio"
@@ -26,6 +29,7 @@
     "zod": "^4.1.0"
   },
   "devDependencies": {
+    "@next/env": "^16.0.0",
     "@tailwindcss/postcss": "^4.1.14",
     "@types/node": "^22.18.0",
     "@types/react": "^19.1.16",
@@ -34,6 +38,7 @@
     "eslint": "^9.35.0",
     "eslint-config-next": "^16.0.0",
     "tailwindcss": "^4.1.14",
+    "tsx": "^4.23.1",
     "typescript": "^5.9.2"
   }
 }

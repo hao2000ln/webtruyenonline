@@ -1,0 +1,28 @@
+const palettes = [
+  "bg-teal-800",
+  "bg-slate-800",
+  "bg-amber-700",
+  "bg-cyan-800",
+];
+
+type StoryCoverProps = {
+  title: string;
+  slug: string;
+  className?: string;
+};
+
+export function StoryCover({ title, slug, className = "" }: StoryCoverProps) {
+  const paletteIndex = [...slug].reduce((sum, character) => sum + character.charCodeAt(0), 0) % palettes.length;
+
+  return (
+    <div
+      className={`relative aspect-[3/4] overflow-hidden rounded-lg ${palettes[paletteIndex]} ${className}`}
+      aria-label={`Bìa truyện ${title}`}
+      role="img"
+    >
+      <div className="absolute inset-x-3 bottom-3 border-t border-white/40 pt-3 text-center text-sm font-semibold leading-tight text-white">
+        {title}
+      </div>
+    </div>
+  );
+}
