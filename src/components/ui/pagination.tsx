@@ -5,10 +5,11 @@ type PaginationProps = {
   totalPages: number;
   pathname: string;
   params?: Record<string, string>;
+  alwaysShow?: boolean;
 };
 
-export function Pagination({ currentPage, totalPages, pathname, params = {} }: PaginationProps) {
-  if (totalPages <= 1) return null;
+export function Pagination({ currentPage, totalPages, pathname, params = {}, alwaysShow = false }: PaginationProps) {
+  if (totalPages <= 1 && !alwaysShow) return null;
 
   const getHref = (page: number) => {
     const searchParams = new URLSearchParams(params);

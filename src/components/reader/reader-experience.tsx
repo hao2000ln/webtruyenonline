@@ -168,7 +168,7 @@ export function ReaderExperience({ story, chapter, paragraphs, previousChapter, 
             <p className="reader-muted mt-3 text-xs">{chapter.wordCount} từ · {chapter.publishedDate}</p>
           </header>
           <div className="reader-content mt-9">
-            {paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+            {paragraphs.map((paragraph, index) => <div key={index} dangerouslySetInnerHTML={{ __html: paragraph }} />)}
           </div>
         </article>
         <div className="mt-8"><ChapterNavigation storySlug={story.slug} previous={previousChapter} next={nextChapter} /></div>

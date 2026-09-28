@@ -12,6 +12,8 @@
     "start": "next start",
     "lint": "eslint .",
     "test:reader-storage": "node --import tsx scripts/test-reader-storage.ts",
+    "test:admin-stories": "node --env-file=.env.local --import tsx scripts/test-admin-stories.ts",
+    "test:admin-chapters": "node --env-file=.env.local --import tsx scripts/test-admin-chapters.ts",
     "db:check": "node --env-file=.env.local scripts/check-db.mjs",
     "db:seed": "node --env-file=.env.local --import tsx scripts/seed-db.ts",
     "db:generate": "drizzle-kit generate",
@@ -24,6 +26,7 @@
     "drizzle-orm": "^0.44.5",
     "next": "^16.0.0",
     "postgres": "^3.4.7",
+    "quill": "^2.0.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "zod": "^4.1.0"

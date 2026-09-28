@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "quill/dist/quill.snow.css";
 
 @theme {
   --color-primary: #0f766e;
@@ -125,6 +126,14 @@ button, select { cursor: pointer; }
   line-height: var(--reader-line-height, 1.9);
 }
 .reader-content p + p { margin-top: 1.35em; }
+.reader-content > div + div { margin-top: 1.35em; }
+.reader-content > div p + p { margin-top: 1.35em; }
+
+.chapter-quill .ql-toolbar { border: 0; border-bottom: 1px solid var(--border); background: #f8fafc; }
+.chapter-quill .ql-container { min-height: 300px; border: 0; font-family: var(--font-inter), Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.75; }
+.chapter-quill .ql-editor { min-height: 300px; padding: 16px; }
+.chapter-quill .ql-editor.ql-blank::before { color: var(--text-muted); font-style: normal; }
+.chapter-preview p + p { margin-top: 1.35em; }
 .reader-container { width: 100%; max-width: min(var(--reader-content-width, 760px), 100%); }
 
 .reader-shell {

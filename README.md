@@ -121,3 +121,10 @@ Admin App dùng layout sidebar + topbar riêng:
 Mọi Server Action hoặc Route Handler thay đổi dữ liệu Admin phải gọi
 `requireAdmin()` trước khi thực hiện mutation. Không dựa riêng vào Proxy hoặc
 trạng thái ẩn/hiện của giao diện.
+
+Stories CRUD hiện có tại `/admin/stories`, gồm tìm kiếm, lọc trạng thái, phân
+trang, tạo, sửa và xóa. Chạy integration test bằng:
+
+```bash
+npm run test:admin-stories
+```

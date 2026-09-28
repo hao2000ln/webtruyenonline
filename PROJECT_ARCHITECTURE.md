@@ -1,339 +1,194 @@
-# STORY WEB — KIẾN TRÚC & KẾ HOẠCH TRIỂN KHAI
+# STORY WEB — KIẾN TRÚC VÀ TRẠNG THÁI PHÁT TRIỂN
 
-> Tài liệu này mô tả ngắn gọn kiến trúc, phạm vi, cấu trúc dữ liệu và lộ trình phát triển của dự án web đọc **truyện chữ**.  
-> Mục tiêu: một developer mới chỉ cần đọc file này là hiểu dự án đang xây gì, dùng công nghệ gì và nên làm tiếp phần nào.
+> Cập nhật: 28/09/2026
+>
+> Dự án: **Mộc Thư** — website đọc truyện chữ tiếng Việt
+>
+> Trạng thái: **đang phát triển MVP**
 
----
+## 1. Mục tiêu
 
-## 1. Mục tiêu dự án
+Xây dựng website đọc truyện chữ có trải nghiệm tốt trên mobile và desktop, ưu
+tiên tốc độ, SEO, khả năng vận hành nội dung và chi phí ban đầu thấp.
 
-Xây dựng website Mộc Thư chữ tiếng Việt, tham khảo mô hình nội dung của WebNovel.vn nhưng không sao chép giao diện.
-
-Core flow:
+Luồng chính:
 
 ```text
-Trang chủ
-  ↓
-Tìm kiếm / Thể loại / Danh sách truyện
-  ↓
-Chi tiết truyện
-  ↓
-Danh sách chương
-  ↓
-Đọc chương
-  ↓
-Chương tiếp theo
+Trang chủ / Tìm kiếm / Thể loại
+                ↓
+          Chi tiết truyện
+                ↓
+        Danh sách chương
+                ↓
+           Đọc chương
+                ↓
+      Chương trước / chương sau
 ```
 
-Ưu tiên hiện tại:
+Nguyên tắc phát triển:
 
-1. Chi phí vận hành ban đầu gần bằng `0`.
-2. SEO tốt.
-3. Trải nghiệm đọc tốt trên mobile.
-4. Code đơn giản, dễ bảo trì.
-5. Có thể nâng cấp backend/hạ tầng sau khi có traffic.
+- Reader và nội dung trước social features.
+- Server Components trước client-side fetching khi phù hợp.
+- PostgreSQL trước Elasticsearch hoặc hệ thống search riêng.
+- Monolith trước microservices.
+- Mọi thay đổi database đi qua migration.
+- Không đưa secret hoặc service-role key xuống client.
+- Mọi tính năng phải sử dụng tốt trên mobile.
 
----
-
-## 2. Phạm vi MVP
-
-### Có trong MVP
-
-- Trang chủ.
-- Danh sách truyện.
-- Truyện mới cập nhật.
-- Truyện mới đăng.
-- Truyện hoàn thành.
-- Truyện nổi bật / xem nhiều.
-- Danh sách thể loại.
-- Tìm kiếm truyện.
-- Trang chi tiết truyện.
-- Danh sách chương.
-- Trang đọc chương.
-- Previous / Next chapter.
-- Reader settings.
-- Lịch sử đọc cho guest bằng `localStorage`.
-- Admin CRUD truyện.
-- Admin CRUD chương.
-- CRUD tác giả / thể loại.
-- Bulk import chương.
-- SEO metadata.
-- Sitemap.
-- Responsive mobile / desktop.
-
-### Làm sau MVP
-
-- Đăng ký / đăng nhập.
-- Theo dõi truyện.
-- Đồng bộ lịch sử đọc.
-- Bookmark.
-- Rating.
-- Comment.
-- Notification.
-- PWA / offline reading.
-- Recommendation engine.
-
----
-
-## 3. Tech stack
-
-### Application
+## 2. Tech stack
 
 ```text
-Next.js
-TypeScript
-Tailwind CSS
-shadcn/ui
+Next.js 16 + React 19
+TypeScript strict
+Tailwind CSS 4
+Supabase Auth + PostgreSQL + Storage (dự kiến cho cover)
+Drizzle ORM + PostgreSQL driver
+Zod validation
+Vercel (dự kiến deploy)
+Cloudflare (dự kiến DNS/CDN)
 ```
 
-Next.js đảm nhiệm cả:
+Local development:
 
 ```text
-Frontend
-Server Components
-Route Handlers / API
-Admin
-SEO
+http://localhost:3003
 ```
 
-Hiện tại **không tách NestJS backend**.
+Hiện tại không sử dụng NestJS, Redis, Elasticsearch, queue, microservices hoặc
+Docker production.
 
-### Database
+## 3. Kiến trúc ứng dụng hiện tại
 
-```text
-Supabase PostgreSQL
-```
-
-### ORM
+Dự án là một Next.js fullstack monolith. Public/User App và Admin App nằm chung
+repository, dùng chung Supabase/PostgreSQL nhưng tách layout và quyền truy cập.
 
 ```text
-Drizzle ORM
-```
-
-### Validation
-
-```text
-Zod
-```
-
-### Authentication
-
-```text
-Supabase Auth
-```
-
-Auth được chuẩn bị từ đầu nhưng chưa phải chức năng ưu tiên của MVP.
-
-### Storage
-
-Giai đoạn đầu:
-
-```text
-Supabase Storage
-```
-
-Chỉ dùng cho:
-
-- cover truyện;
-- avatar nếu sau này cần.
-
-Nội dung chương được lưu trong PostgreSQL, không lưu thành file.
-
-### Hosting
-
-```text
-Vercel
-```
-
-### DNS / CDN
-
-Sau khi có domain:
-
-```text
-Cloudflare
-```
-
----
-
-## 4. Kiến trúc hệ thống
-
-```text
-                       User
-                        │
-                        ▼
-                  Cloudflare
-                  (sau này)
-                        │
-                        ▼
-              ┌──────────────────┐
-              │      Vercel      │
-              │                  │
-              │     Next.js      │
-              │                  │
-              │ Frontend + API   │
-              │ Admin + SEO      │
-              └────────┬─────────┘
-                       │
-          ┌────────────┴────────────┐
-          │                         │
-          ▼                         ▼
-┌───────────────────┐    ┌───────────────────┐
-│ Supabase Postgres │    │ Supabase Storage  │
-│                   │    │                   │
-│ Story             │    │ Story Covers      │
-│ Chapter           │    │ Avatars           │
-│ Genre             │    │                   │
-│ Author            │    └───────────────────┘
-│ History           │
-│ User              │
-└───────────────────┘
-```
-
-Không dùng ở giai đoạn hiện tại:
-
-```text
-Redis
-NestJS
-Elasticsearch
-Kafka
-RabbitMQ
-Docker production
-Microservices
-```
-
-Chỉ bổ sung khi có nhu cầu thực tế.
-
----
-
-## 5. Kiến trúc code
-
-Dự án dùng một Next.js application.
-
-```text
-story-web/
+src/app/
+├── (site)/                     Public/User App
+│   ├── layout.tsx              Header + content + footer
+│   ├── page.tsx                Trang chủ
+│   ├── truyen/                 Chi tiết truyện + reader
+│   ├── the-loai/               Danh mục thể loại
+│   ├── tim-kiem/               Tìm kiếm
+│   ├── lich-su/                Guest history
+│   ├── dang-nhap/              User login
+│   ├── dang-ky/                User registration
+│   ├── tai-khoan/              User account
+│   └── theo-doi/               Truyện đang theo dõi
 │
-├── src/
-│   │
-│   ├── app/
-│   │   │
-│   │   ├── (site)/
-│   │   │   ├── page.tsx
-│   │   │   │
-│   │   │   ├── truyen/
-│   │   │   │   └── [slug]/
-│   │   │   │       ├── page.tsx
-│   │   │   │       └── chuong-[chapter]/
-│   │   │   │           └── page.tsx
-│   │   │   │
-│   │   │   ├── the-loai/
-│   │   │   ├── truyen-moi/
-│   │   │   ├── moi-cap-nhat/
-│   │   │   ├── truyen-hot/
-│   │   │   ├── truyen-full/
-│   │   │   └── tim-kiem/
-│   │   │
-│   │   ├── admin/
-│   │   │
-│   │   └── api/
-│   │
-│   ├── components/
-│   │   ├── layout/
-│   │   ├── story/
-│   │   ├── reader/
-│   │   ├── search/
-│   │   └── ui/
-│   │
-│   ├── db/
-│   │   ├── schema.ts
-│   │   └── index.ts
-│   │
-│   ├── lib/
-│   │   ├── supabase/
-│   │   ├── validation/
-│   │   └── utils/
-│   │
-│   └── types/
+├── admin/
+│   ├── (auth)/login/           Admin login riêng
+│   └── (dashboard)/            Sidebar + topbar + admin content
+│       ├── stories/            Stories CRUD
+│       ├── chapters/           Đang chờ CRUD
+│       ├── authors/            Đang chờ CRUD
+│       ├── genres/             Đang chờ CRUD
+│       └── import/             Đang chờ Bulk Import
 │
-├── drizzle/
-├── public/
-├── .env.local
-├── .env.example
-├── drizzle.config.ts
-├── package.json
-└── README.md
+├── api/
+│   ├── follows/[slug]/         Follow/unfollow
+│   └── history/sync/           Sync guest history lên tài khoản
+│
+└── auth/confirm/               Xác nhận email Supabase SSR
 ```
 
----
+## 4. Public/User App
 
-## 6. Routing chính
+Các route chính:
 
 ```text
 /
-```
-
-Trang chủ.
-
-```text
-/truyen-moi
-/moi-cap-nhat
-/truyen-hot
-/truyen-full
-```
-
-Danh sách truyện.
-
-```text
+/truyen/[slug]
+/truyen/[slug]/chuong-[chapter]
 /the-loai
 /the-loai/[slug]
+/tim-kiem
+/lich-su
+/dang-nhap
+/dang-ky
+/tai-khoan
+/theo-doi
 ```
 
-Danh mục / thể loại.
+### Đã hoàn thành
+
+- Trang chủ lấy dữ liệu thật từ PostgreSQL.
+- Chi tiết truyện và danh sách chương.
+- Search/filter/sort/pagination danh sách chương.
+- Reader với previous/next chapter.
+- Reader settings: font size, line height, content width và bốn theme.
+- Guest history bằng `localStorage`.
+- Tìm kiếm truyện theo tên/tác giả.
+- Danh sách và chi tiết thể loại.
+- User đăng ký/đăng nhập bằng Supabase Auth.
+- Cookie session SSR, persist sau reload.
+- Trang tài khoản và đăng xuất.
+- Follow/unfollow truyện.
+- Đồng bộ guest history lên `reading_history` khi user vào trang tài khoản.
+- Metadata động cơ bản cho story, chapter, search và genre.
+
+### Quyền User
+
+- Guest luôn được đọc truyện, tìm kiếm và dùng lịch sử local.
+- User đã đăng nhập chỉ được thao tác dữ liệu thuộc chính mình.
+- RLS giới hạn `profiles`, `follows`, `reading_history` theo `auth.uid()`.
+- Bookmark, rating và comment chưa triển khai.
+
+## 5. Admin App
+
+Các route:
 
 ```text
-/tim-kiem?q=...
-```
-
-Tìm kiếm.
-
-```text
-/truyen/[slug]
-```
-
-Chi tiết truyện.
-
-Ví dụ:
-
-```text
-/truyen/pham-nhan-tu-tien
-```
-
-Trang đọc:
-
-```text
-/truyen/[slug]/chuong-[chapter]
-```
-
-Ví dụ:
-
-```text
-/truyen/pham-nhan-tu-tien/chuong-100
-```
-
-Admin:
-
-```text
+/admin/login
 /admin
 /admin/stories
 /admin/stories/new
-/admin/stories/[id]
-/admin/stories/[id]/chapters
+/admin/stories/[id]/edit
+/admin/chapters
+/admin/authors
+/admin/genres
+/admin/import
 ```
 
----
+Admin có layout riêng gồm sidebar, topbar và content area; không sử dụng
+header/footer public.
 
-## 7. Database schema
+### Authentication và authorization
 
-Các bảng chính:
+- Chỉ user có `app_metadata.role === "admin"` được truy cập.
+- Guest vào `/admin/**` được redirect về `/admin/login`.
+- User thường bị redirect về public site.
+- Proxy chỉ là lớp kiểm tra sớm.
+- Server layout và mọi mutation phải kiểm tra lại bằng `requireAdmin()`.
+- Service-role key không được sử dụng ở client.
+
+### Stories CRUD — đã hoàn thành
+
+- Table dữ liệu thật bằng Drizzle.
+- Hiển thị title, author, status, total chapters, views, latest chapter và actions.
+- Search theo title hoặc author.
+- Filter status.
+- Pagination server-side, 20 truyện/trang.
+- Create và edit story.
+- Zod validation.
+- Slug unique, kiểm tra ở application và database constraint.
+- Chọn một author và nhiều genres.
+- Draft/published state.
+- Delete có confirmation; chapters, genres relation và dữ liệu liên quan cascade.
+- Revalidate homepage, search, genre, story detail và chapter pages sau mutation.
+
+### Admin chưa hoàn thành
+
+- Chapters CRUD.
+- Authors CRUD.
+- Genres CRUD.
+- Bulk chapter import có preview/confirm.
+- Upload cover qua Supabase Storage.
+- Dashboard statistics thật.
+
+## 6. Database
+
+Các bảng hiện tại:
 
 ```text
 profiles
@@ -346,929 +201,222 @@ reading_history
 follows
 ```
 
-Có thể bổ sung sau:
+Quan hệ chính:
 
 ```text
-bookmarks
-ratings
-comments
-notifications
+authors 1 ─── n stories
+stories n ─── n genres       qua story_genres
+stories 1 ─── n chapters
+profiles n ── n stories      qua follows
+profiles 1 ── n reading_history
 ```
 
----
+Nội dung chương lưu trực tiếp trong `chapters.content` dưới dạng plain text hoặc
+Markdown đã được kiểm soát. Không lưu HTML ngoài chưa sanitize.
 
-## 8. `stories`
-
-Chứa metadata của một truyện.
-
-Các field chính:
+Migration gần nhất:
 
 ```text
-id
-title
-slug
-original_title
-description
-cover_url
-
-author_id
-
-status
-
-total_chapters
-
-view_count
-follow_count
-
-rating_avg
-rating_count
-
-latest_chapter_id
-latest_chapter_at
-
-published_at
-created_at
-updated_at
+0003_user_self_service_policies.sql
 ```
 
-Status:
+Migration này tạo profile cho Supabase Auth user mới và thêm RLS policy cho dữ
+liệu cá nhân.
 
-```text
-ONGOING
-COMPLETED
-HIATUS
-```
+## 7. Cách truy cập dữ liệu
 
-`slug` phải unique.
-
-Ví dụ:
-
-```text
-title: Phàm Nhân Tu Tiên
-slug: pham-nhan-tu-tien
-```
-
----
-
-## 9. `authors`
-
-```text
-id
-name
-slug
-description
-created_at
-updated_at
-```
-
-Một truyện MVP được gắn một tác giả chính.
-
-Nếu sau này cần nhiều tác giả / truyện, tạo bảng:
-
-```text
-story_authors
-```
-
----
-
-## 10. `genres`
-
-```text
-id
-name
-slug
-description
-```
-
-Ví dụ:
-
-```text
-Tiên Hiệp
-Huyền Huyễn
-Kiếm Hiệp
-Đô Thị
-Ngôn Tình
-Xuyên Không
-Trọng Sinh
-Khoa Huyễn
-Lịch Sử
-```
-
-Quan hệ nhiều-nhiều:
-
-```text
-stories
-   │
-   ▼
-story_genres
-   │
-   ▼
-genres
-```
-
----
-
-## 11. `chapters`
-
-Đây là bảng dữ liệu lớn nhất của hệ thống.
-
-```text
-id
-story_id
-
-chapter_number
-title
-slug
-
-content
-word_count
-
-view_count
-
-published_at
-created_at
-updated_at
-```
-
-`chapter_number` nên là kiểu numeric thay vì integer để có thể hỗ trợ:
-
-```text
-1
-2
-2.5
-3
-```
-
----
-
-## 12. Nội dung chương
-
-Nội dung chương được lưu trực tiếp trong PostgreSQL:
-
-```text
-chapters.content
-```
-
-Ưu tiên lưu:
-
-```text
-plain text
-```
-
-hoặc:
-
-```text
-Markdown
-```
-
-Không lưu HTML từ nguồn bên ngoài mà chưa sanitize.
-
-Ví dụ nội dung chuẩn:
-
-```markdown
-Hàn Lập đứng trước cánh cửa đá.
-
-Hắn chậm rãi đưa tay lên.
-
-“Đây là nơi nào?”
-```
-
-Khi render:
-
-```text
-Markdown / Text
-      ↓
-Sanitize
-      ↓
-HTML
-      ↓
-Reader
-```
-
----
-
-## 13. Trang chủ
-
-Các block dự kiến:
-
-```text
-Header
-Search
-Featured / Đề cử
-
-Mới lên chương
-Truyện mới
-Truyện hot
-
-Bảng xếp hạng
-Truyện hoàn thành
-
-Genres
-Footer
-```
-
-Ưu tiên hiển thị nội dung hơn hiệu ứng.
-
----
-
-## 14. Trang chi tiết truyện
-
-Hiển thị:
-
-```text
-Cover
-
-Tên truyện
-Tác giả
-Thể loại
-Trạng thái
-
-Số chương
-Lượt đọc
-
-Mô tả
-
-Đọc từ đầu
-Đọc tiếp
-
-Danh sách chương
-```
-
-Nếu user có lịch sử:
-
-```text
-Đọc tiếp chương X
-```
-
-Nếu chưa:
-
-```text
-Đọc từ đầu
-```
-
----
-
-## 15. Reader
-
-Reader là phần UX quan trọng nhất.
-
-Layout desktop:
-
-```text
-max-width: khoảng 700–850px
-```
-
-Không kéo text full màn hình.
-
-Reader hỗ trợ:
-
-```text
-Previous chapter
-Next chapter
-
-Font size
-Line height
-Content width
-
-Light theme
-Sepia theme
-Dark theme
-Black theme
-```
-
-Reader settings được lưu vào:
-
-```text
-localStorage
-```
-
-Không cần lưu database.
-
-Ví dụ:
-
-```json
-{
-  "fontSize": 20,
-  "lineHeight": 1.9,
-  "theme": "sepia",
-  "width": 760
-}
-```
-
----
-
-## 16. Reading history
-
-### Guest
-
-Lưu trong:
-
-```text
-localStorage
-```
-
-Ví dụ:
-
-```json
-[
-  {
-    "storySlug": "pham-nhan-tu-tien",
-    "chapter": 128,
-    "updatedAt": 123456789
-  }
-]
-```
-
-Không bắt buộc user đăng nhập để có lịch sử đọc.
-
-### Logged-in user
-
-Sau MVP, lưu database:
-
-```text
-reading_history
-```
-
-Field:
-
-```text
-user_id
-story_id
-chapter_id
-progress
-last_read_at
-```
-
-Unique:
-
-```text
-user_id + story_id
-```
-
-Khi login có thể merge local history vào server.
-
----
-
-## 17. Search
-
-Giai đoạn đầu dùng PostgreSQL.
-
-Search theo:
-
-```text
-story.title
-story.original_title
-author.name
-```
-
-Có thể bật PostgreSQL extension:
-
-```sql
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
-```
-
-Index:
-
-```sql
-CREATE INDEX stories_title_trgm
-ON stories
-USING gin(title gin_trgm_ops);
-```
-
-Chưa cần Elasticsearch.
-
----
-
-## 18. Search autocomplete
-
-Flow:
-
-```text
-User nhập từ khóa
-       ↓
-debounce ~300ms
-       ↓
-GET /api/search?q=...
-       ↓
-PostgreSQL
-       ↓
-5–10 kết quả
-```
-
----
-
-## 19. Admin
-
-Admin MVP gồm:
-
-```text
-Dashboard
-
-Stories
-Chapters
-Genres
-Authors
-```
-
-### Story CRUD
-
-Form:
-
-```text
-Tên truyện
-Slug
-Tên gốc
-Tác giả
-Cover
-Mô tả
-Thể loại
-Trạng thái
-```
-
-### Chapter CRUD
-
-Form:
-
-```text
-Truyện
-Số chương
-Tên chương
-Nội dung
-Ngày publish
-```
-
----
-
-## 20. Bulk import chapter
-
-Đây là chức năng admin quan trọng.
-
-Input có thể là:
-
-```text
-001.txt
-002.txt
-003.txt
-```
-
-hoặc một file lớn:
-
-```text
-story.txt
-```
-
-Format:
-
-```text
-Chương 1: Khởi đầu
-
-Nội dung...
-
-
-Chương 2: Trở về
-
-Nội dung...
-```
-
-Flow:
-
-```text
-Upload
-  ↓
-Parse
-  ↓
-Detect chapters
-  ↓
-Preview
-  ↓
-Confirm
-  ↓
-Insert database
-```
-
-Không insert trực tiếp trước khi admin preview.
-
----
-
-## 21. API / Server logic
-
-Vì đây là Next.js fullstack, Server Components có thể query database trực tiếp.
-
-Ưu tiên:
+Server-rendered public/admin pages ưu tiên:
 
 ```text
 Server Component
       ↓
-Drizzle
+Drizzle ORM
       ↓
-PostgreSQL
-```
-
-Không cần vòng:
-
-```text
-Server Component
-      ↓ HTTP
-/api/...
-      ↓
-PostgreSQL
-```
-
-Route Handlers/API dùng cho những thao tác từ client như:
-
-```text
-Search autocomplete
-History
-Follow
-Admin mutations
-Auth
-```
-
-Ví dụ:
-
-```text
-GET  /api/search?q=
-POST /api/history
-
-POST /api/admin/stories
-PATCH /api/admin/stories/:id
-
-POST /api/admin/chapters
-PATCH /api/admin/chapters/:id
-```
-
----
-
-## 22. Supabase
-
-Supabase được sử dụng cho:
-
-```text
-PostgreSQL
-Auth
-Storage
-```
-
-Environment:
-
-```env
-DATABASE_URL=
-
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
-```
-
-Secret/private credentials không được commit lên Git.
-
-`.env.local` nằm trong `.gitignore`.
-
----
-
-## 23. Database migration
-
-Schema được quản lý bằng Drizzle.
-
-Flow khi thay schema:
-
-```text
-src/db/schema.ts
-       ↓
-db:generate
-       ↓
-migration file
-       ↓
-db:migrate
-       ↓
 Supabase PostgreSQL
 ```
 
-Không sửa production schema thủ công nếu có thể tránh.
+Không gọi HTTP API nội bộ khi Server Component có thể query database trực tiếp.
 
----
-
-## 24. SEO
-
-SEO là yêu cầu quan trọng của dự án.
-
-Mỗi story có URL:
+Route Handlers dùng cho thao tác từ Client Component:
 
 ```text
-/truyen/[slug]
+GET/POST/DELETE /api/follows/[slug]
+POST            /api/history/sync
 ```
 
-Mỗi chapter:
+Admin create/update/delete dùng Server Actions, xác thực Admin trước khi gọi
+database mutation.
+
+## 8. Reader và lịch sử đọc
+
+Reader là phần UX quan trọng nhất:
+
+- Nội dung giới hạn chiều rộng 640–880px.
+- Cỡ chữ 16–26px.
+- Line height 1.5–2.1.
+- Theme light, sepia, dark và black.
+- Settings và guest history không yêu cầu đăng nhập.
+
+Guest history:
 
 ```text
-/truyen/[slug]/chuong-[chapter]
+localStorage → tối đa 50 truyện gần nhất
 ```
 
-Trang story cần:
+User history:
 
 ```text
-title
-description
-canonical
-OpenGraph
-structured data
+localStorage
+    ↓ đăng nhập / mở tài khoản
+/api/history/sync
+    ↓
+reading_history
 ```
 
-Trang chapter:
+Server chỉ ghi lịch sử mới hơn để tránh ghi đè tiến độ mới bằng dữ liệu local cũ.
 
-```text
-Story Name - Chương X
+## 9. SEO và performance
+
+Đã có:
+
+- Server Components cho nội dung chính.
+- Metadata động cơ bản.
+- Homepage revalidate 60 giây.
+- Pagination chapter/story admin.
+- Hạn chế JavaScript trên reader ngoài settings/history.
+- Local font để tránh phụ thuộc font CDN.
+
+Chưa có:
+
+- `robots.txt`.
+- Sitemap cho stories, genres và chapters.
+- Canonical đầy đủ.
+- Open Graph image hoàn chỉnh.
+- JSON-LD cho story/chapter.
+- Đo Core Web Vitals production.
+
+## 10. Security
+
+- Input Admin được validate bằng Zod.
+- Slug có unique index tại PostgreSQL.
+- Auth user được xác minh bằng `supabase.auth.getUser()` ở server.
+- Admin role lấy từ `app_metadata`, không lấy từ `user_metadata`.
+- Mutation Admin gọi `requireAdmin()`.
+- User data được bảo vệ bằng RLS.
+- `.env.local` và secrets không commit.
+- Không expose `SUPABASE_SERVICE_ROLE_KEY` ra client.
+
+Cần bổ sung trước production:
+
+- Rate limit login và các endpoint có thể bị abuse.
+- Upload validation cho cover/import.
+- Giới hạn kích thước nội dung và file import.
+- Security headers phù hợp deployment.
+
+## 11. Testing hiện tại
+
+Scripts:
+
+```bash
+npm run lint
+npx tsc --noEmit
+npm run test:reader-storage
+npm run test:admin-stories
+npm run build
 ```
 
-Cần sitemap:
+Stories integration test hiện kiểm tra:
 
 ```text
-/sitemap.xml
+TC01 list dữ liệu thật
+TC02 search title
+TC03 search author
+TC04 filter status
+TC05 pagination
+TC06 create
+TC07 duplicate slug
+TC08 edit được public query đọc thấy
+TC09 đổi author/genres
+TC10 delete cascade
+TC11 Admin authorization boundary
 ```
 
-Khi số lượng chapter lớn sẽ chia:
+Các fixture integration test có prefix riêng và được cleanup sau mỗi lần chạy.
+
+Trạng thái gần nhất:
+
+- TypeScript strict: pass.
+- ESLint: pass.
+- Reader storage tests: pass.
+- Stories CRUD integration TC01–TC11: pass.
+- Production source compilation: pass.
+- Full `next build`: chưa xác nhận exit code 0 trong môi trường Codex vì sandbox
+  chặn Next.js worker với `spawn EPERM`; cần chạy lại ngoài sandbox/local CI.
+
+## 12. Đang phát triển và kế hoạch tiếp theo
+
+### Ưu tiên 1 — Admin content operations
 
 ```text
-/sitemap-stories.xml
-/sitemap-genres.xml
-/sitemap-chapters-1.xml
-/sitemap-chapters-2.xml
+Chapters CRUD
+    ↓
+Authors CRUD + Genres CRUD
+    ↓
+Bulk chapter import: parse → preview → confirm → insert
+    ↓
+Upload cover bằng Supabase Storage
 ```
 
----
-
-## 25. Performance
-
-Các nguyên tắc:
-
-- Dùng Server Components khi hợp lý.
-- Không fetch API nội bộ nếu có thể query DB trực tiếp.
-- Pagination danh sách chương.
-- Không render hàng nghìn chapter trong một page.
-- Cache các listing ít thay đổi.
-- Optimize cover image.
-- Hạn chế JavaScript trên trang reader.
-
-Reader cần tải nhanh và ít distraction.
-
----
-
-## 26. Mobile-first
-
-Web Mộc Thư dự kiến có lượng mobile lớn.
-
-Ưu tiên:
+### Ưu tiên 2 — SEO và production
 
 ```text
-responsive
-tap target đủ lớn
-font dễ đọc
-dark mode
-reader toolbar đơn giản
+robots.txt
+sitemap phân trang
+canonical + Open Graph + JSON-LD
+performance/accessibility audit
+production build + deploy Vercel
+domain/Cloudflare
 ```
 
-Mobile navigation có thể dùng:
+### Ưu tiên 3 — User features
 
 ```text
-Home
-Search
-History
-Following
-Account
-```
-
----
-
-## 27. Security cơ bản
-
-Cần đảm bảo:
-
-```text
-Validate input bằng Zod
-Sanitize chapter content
-Không expose private Supabase keys
-Admin authorization
-Rate limit login/search nếu cần
-Upload validation
-SQL query parameterized qua ORM
-```
-
-Admin route phải được bảo vệ khi Auth được triển khai.
-
----
-
-## 28. Các thứ chưa làm ở giai đoạn hiện tại
-
-Không triển khai sớm:
-
-```text
-Microservices
-NestJS backend riêng
-Redis
-Queue
-Elasticsearch
-Recommendation AI
-Realtime comment
-Complex analytics
-```
-
-Nguyên tắc:
-
-> Chỉ thêm infrastructure khi hệ thống hiện tại thực sự gặp giới hạn.
-
----
-
-## 29. Lộ trình triển khai
-
-### Phase 1 — Foundation
-
-```text
-Next.js skeleton
-Tailwind
-Supabase
-Drizzle
-Database schema
-```
-
-**Trạng thái: đang triển khai.**
-
----
-
-### Phase 2 — Story Core
-
-```text
-Homepage
-Story listing
-Genre
-Story detail
-Chapter list
-```
-
----
-
-### Phase 3 — Reader
-
-```text
-Chapter page
-Previous / Next
-Reader settings
-Guest reading history
-```
-
-Sau phase này core reading flow phải hoàn chỉnh.
-
----
-
-### Phase 4 — Admin
-
-```text
-Story CRUD
-Chapter CRUD
-Genre CRUD
-Author CRUD
-Bulk chapter import
-Cover upload
-```
-
----
-
-### Phase 5 — Discovery
-
-```text
-Search
-Autocomplete
-Latest updated
-New stories
-Hot
-Completed
-Ranking
-```
-
----
-
-### Phase 6 — SEO & Production
-
-```text
-Metadata
-Canonical
-Structured data
-Sitemap
-Performance check
-Deploy Vercel
-Cloudflare/domain
-```
-
-Sau Phase 6 có thể public MVP.
-
----
-
-### Phase 7 — User Features
-
-```text
-Supabase Auth
-Follow
-Server reading history
+Hiển thị server reading history đầy đủ
+Merge local/server history hai chiều
 Bookmark
 Rating
 Comment
-Profile
+Notification
 ```
 
----
-
-## 30. Tiêu chí hoàn thành MVP
-
-MVP được coi là usable khi user có thể:
+### Chỉ bổ sung khi có nhu cầu thực tế
 
 ```text
-Mở website
-   ↓
-Tìm thấy truyện
-   ↓
-Xem thông tin truyện
-   ↓
-Chọn chương
-   ↓
-Đọc thoải mái trên mobile/desktop
-   ↓
-Chuyển chương trước/sau
-   ↓
-Thoát website
-   ↓
-Quay lại và tiếp tục chương đang đọc
+Redis/cache riêng
+Elasticsearch
+Queue
+Recommendation engine
+PWA/offline reading
+Backend service riêng
 ```
 
-Admin phải có thể:
+## 13. Tiêu chí MVP public
+
+MVP có thể public khi:
+
+- Core reading flow ổn định trên mobile và desktop.
+- Admin có thể tạo/sửa truyện và quản lý/import chương.
+- Cover upload hoạt động.
+- SEO metadata, robots và sitemap hoàn chỉnh.
+- Production build và deployment pass.
+- Auth/RLS được kiểm tra trên môi trường production.
+- Có dữ liệu nội dung đủ để người dùng khám phá và đọc liên tục.
+
+## 14. Tóm tắt một dòng
 
 ```text
-Tạo truyện
-Tạo / sửa chương
-Import nhiều chương
-Quản lý thể loại
-Quản lý tác giả
-Upload cover
-```
-
----
-
-## 31. Nguyên tắc phát triển
-
-1. **Reader trước social features.**
-2. **SEO trước các tính năng trang trí.**
-3. **Server Components trước client-side fetch khi phù hợp.**
-4. **PostgreSQL trước search engine riêng.**
-5. **Monolith trước microservices.**
-6. **Free tier trước hạ tầng trả phí.**
-7. **Đơn giản trước tối ưu sớm.**
-8. Mọi thay đổi database đi qua migration.
-9. Không commit secrets.
-10. Mỗi feature phải hoạt động tốt trên mobile.
-
----
-
-## 32. Trạng thái hiện tại
-
-Đã định hướng / chuẩn bị:
-
-```text
-✓ Next.js architecture
-✓ TypeScript
-✓ Tailwind
-✓ Supabase project
-✓ PostgreSQL
-✓ Drizzle ORM
-✓ Initial database entities
-```
-
-Bước đang làm:
-
-```text
-Kết nối Supabase
-       ↓
-Generate migration
-       ↓
-Migrate database
-       ↓
-Xác nhận tables
-```
-
-Sau đó:
-
-```text
-Seed dữ liệu mẫu
-       ↓
-Homepage
-       ↓
-Story detail
-       ↓
-Reader
-```
-
----
-
-## 33. Tóm tắt một dòng
-
-```text
-Next.js fullstack + Supabase PostgreSQL + Drizzle
-→ xây web Mộc Thư chữ tối ưu Reader + SEO
-→ chạy free-tier trước
-→ chỉ tách backend / thêm cache khi traffic thực sự yêu cầu.
+Next.js fullstack + Supabase/PostgreSQL + Drizzle
+→ Public/User App và Admin App tách layout/quyền
+→ Core Reader + Auth + Follow/History + Stories CRUD đã hoạt động
+→ Đang ưu tiên Chapters CRUD, Bulk Import, Storage và SEO để public MVP.
 ```
