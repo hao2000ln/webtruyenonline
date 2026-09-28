@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { Bookmark, Loader2 } from "lucide-react";
+
 type FollowState = "loading" | "guest" | "following" | "not-following" | "error";
 
 export function FollowButton({ storySlug }: { storySlug: string }) {
@@ -59,17 +61,27 @@ export function FollowButton({ storySlug }: { storySlug: string }) {
         ? "Có lỗi"
         : "Theo dõi";
 
-  const icon = state === "following" ? "❤️" : "🤍";
-
   return (
     <button
       type="button"
       onClick={toggleFollow}
       disabled={state === "loading" || state === "error"}
       aria-pressed={state === "following"}
-      className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-xs transition hover:bg-slate-50 active:scale-98 disabled:opacity-50"
+      className={`flex items-center justify-center gap-2 rounded-xl border px-5 py-3.5 text-sm font-semibold shadow-2xs transition active:scale-95 disabled:opacity-50 ${
+        state === "following"
+          ? "border-teal-200 bg-teal-50 text-[#0f766e]"
+          : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300"
+      }`}
     >
-      <span>{icon}</span>
+      {state === "loading" ? (
+        <Loader2 className="w-4 h-4 animate-spin text-teal-700" />
+      ) : (
+        <Bookmark
+          className={`w-4 h-4 ${
+            state === "following" ? "fill-[#0f766e] text-[#0f766e]" : "text-slate-500"
+          }`}
+        />
+      )}
       <span>{label}</span>
     </button>
   );

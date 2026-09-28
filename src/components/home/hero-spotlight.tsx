@@ -2,6 +2,7 @@ import Link from "next/link";
 import { HeroStoryCover } from "@/components/story/story-cover";
 import type { StoryCardData } from "@/db/queries/stories";
 import { formatCompactNumber } from "@/lib/format";
+import { BookOpen, Eye, Compass, Sparkles } from "lucide-react";
 
 type HeroSpotlightProps = {
   featuredStory?: StoryCardData | null;
@@ -23,7 +24,7 @@ export function HeroSpotlight({ featuredStory, genres }: HeroSpotlightProps) {
             <div>
               <div className="flex items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-teal-200/80 bg-teal-50 px-3 py-1 text-xs font-bold text-teal-800">
-                  <span className="h-1.5 w-1.5 rounded-full bg-teal-600 animate-pulse" />
+                  <Sparkles className="w-3.5 h-3.5 text-teal-600 animate-pulse" />
                   MỘC THƯ NỔI BẬT
                 </span>
                 <span className="text-xs text-slate-400">Được biên tập viên đề xuất</span>
@@ -43,14 +44,14 @@ export function HeroSpotlight({ featuredStory, genres }: HeroSpotlightProps) {
                   Tác giả: <strong className="font-bold text-slate-800">{featuredStory.authorName ?? "Khuyết danh"}</strong>
                 </span>
                 <span className="text-slate-300">•</span>
-                <span className="flex items-center gap-1">
-                  <span>📚</span>
-                  <strong className="font-bold text-slate-800">{featuredStory.totalChapters}</strong> chương
+                <span className="flex items-center gap-1.5">
+                  <BookOpen className="w-3.5 h-3.5 text-teal-700" />
+                  <span><strong className="font-bold text-slate-800">{featuredStory.totalChapters}</strong> chương</span>
                 </span>
                 <span className="text-slate-300">•</span>
-                <span className="flex items-center gap-1">
-                  <span>👁</span>
-                  <strong className="font-bold text-slate-800">{formatCompactNumber(featuredStory.viewCount)}</strong> lượt đọc
+                <span className="flex items-center gap-1.5">
+                  <Eye className="w-3.5 h-3.5 text-teal-700" />
+                  <span><strong className="font-bold text-slate-800">{formatCompactNumber(featuredStory.viewCount)}</strong> lượt đọc</span>
                 </span>
               </div>
 
@@ -61,16 +62,16 @@ export function HeroSpotlight({ featuredStory, genres }: HeroSpotlightProps) {
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
                   href={`/truyen/${featuredStory.slug}`}
-                  className="flex items-center gap-2 rounded-xl bg-[#0f766e] px-6 py-3 text-sm font-bold text-white shadow-md shadow-teal-700/20 transition hover:bg-[#115e59] active:scale-95" style={{ color: "#fff" }}
+                  className="flex items-center gap-2 rounded-xl bg-[#0f766e] px-6 py-3 text-sm font-bold text-white shadow-md shadow-teal-700/20 transition hover:bg-[#115e59] active:scale-95"
                 >
-                  <span>📖</span>
+                  <BookOpen className="w-4 h-4" />
                   <span>Đọc ngay tác phẩm</span>
                 </Link>
                 <Link
                   href="/the-loai"
                   className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 active:scale-95"
                 >
-                  <span>🔍</span>
+                  <Compass className="w-4 h-4 text-slate-500" />
                   <span>Khám phá thể loại</span>
                 </Link>
               </div>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { StoryCover } from "@/components/story/story-cover";
 import type { StoryCardData } from "@/db/queries/stories";
 import { formatCompactNumber, getStoryStatusLabel } from "@/lib/format";
+import { ArrowRight, Flame } from "lucide-react";
 
 type FeaturedBookGridProps = {
   stories: StoryCardData[];
@@ -14,7 +15,9 @@ export function FeaturedBookGrid({ stories }: FeaturedBookGridProps) {
     <section className="rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-7 shadow-xs">
       <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
         <div className="flex items-center gap-2.5">
-          <span className="h-5 w-1.5 rounded-full bg-[#0f766e]" aria-hidden="true" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-teal-50 text-[#0f766e]">
+            <Flame className="w-4 h-4" />
+          </div>
           <div>
             <span className="text-[10px] font-bold uppercase tracking-widest text-[#0f766e] block">
               ĐỀ CỬ NỔI BẬT
@@ -27,7 +30,7 @@ export function FeaturedBookGrid({ stories }: FeaturedBookGridProps) {
           className="text-xs font-semibold text-slate-500 hover:text-[#0f766e] transition flex items-center gap-1"
         >
           <span>Xem tất cả</span>
-          <span>→</span>
+          <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </div>
 

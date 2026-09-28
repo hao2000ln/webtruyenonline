@@ -516,10 +516,10 @@ export function ReaderExperience({
               <button
                 type="button"
                 onClick={() => setSettingsOpen(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-lg opacity-60 hover:opacity-100"
+                className="flex h-8 w-8 items-center justify-center rounded-full opacity-60 hover:opacity-100"
                 aria-label="Đóng"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 
@@ -620,21 +620,24 @@ export function ReaderExperience({
                     Căn lề
                   </span>
                   <div className="grid grid-cols-2 gap-1.5">
-                    {alignOptions.map((align) => (
-                      <button
-                        key={align.value}
-                        type="button"
-                        onClick={() => updateSettings({ textAlign: align.value })}
-                        className={`flex h-9 items-center justify-center gap-1 rounded-lg border text-xs font-semibold transition ${
-                          settings.textAlign === align.value
-                            ? "border-teal-600 bg-teal-600 text-white"
-                            : "reader-settings-choice opacity-80 hover:opacity-100"
-                        }`}
-                      >
-                        <span>{align.icon}</span>
-                        <span>{align.value === "left" ? "Trái" : "Đều"}</span>
-                      </button>
-                    ))}
+                    {alignOptions.map((align) => {
+                      const IconComp = align.icon;
+                      return (
+                        <button
+                          key={align.value}
+                          type="button"
+                          onClick={() => updateSettings({ textAlign: align.value })}
+                          className={`flex h-9 items-center justify-center gap-1.5 rounded-lg border text-xs font-semibold transition ${
+                            settings.textAlign === align.value
+                              ? "border-teal-600 bg-teal-600 text-white"
+                              : "reader-settings-choice opacity-80 hover:opacity-100"
+                          }`}
+                        >
+                          <IconComp className="w-3.5 h-3.5" />
+                          <span>{align.value === "left" ? "Trái" : "Đều"}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -730,29 +733,33 @@ export function ReaderExperience({
               <button
                 type="button"
                 onClick={() => setChaptersDrawerOpen(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-lg opacity-60 hover:opacity-100"
+                className="flex h-8 w-8 items-center justify-center rounded-full opacity-60 hover:opacity-100"
                 aria-label="Đóng"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Filter & Sort Bar */}
             <div className="my-3 flex items-center gap-2">
-              <input
-                type="text"
-                value={chapterSearch}
-                onChange={(e) => setChapterSearch(e.target.value)}
-                placeholder="Tìm số chương hoặc tiêu đề..."
-                className="reader-settings-choice h-9 flex-1 rounded-lg border px-3 text-xs outline-none focus:ring-2 focus:ring-teal-600/30"
-              />
+              <div className="relative flex-1">
+                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 opacity-40" />
+                <input
+                  type="text"
+                  value={chapterSearch}
+                  onChange={(e) => setChapterSearch(e.target.value)}
+                  placeholder="Tìm số chương hoặc tiêu đề..."
+                  className="reader-settings-choice h-9 w-full rounded-lg border pl-8 pr-3 text-xs outline-none focus:ring-2 focus:ring-teal-600/30"
+                />
+              </div>
               <button
                 type="button"
                 onClick={() => setChapterSortAsc((prev) => !prev)}
-                className="reader-outline-button h-9 min-h-0 px-3 text-xs"
+                className="reader-outline-button flex items-center gap-1.5 h-9 min-h-0 px-3 text-xs"
                 title="Đổi thứ tự sắp xếp"
               >
-                {chapterSortAsc ? "Mới nhất ↑" : "Cũ nhất ↓"}
+                <ArrowDownUp className="w-3.5 h-3.5" />
+                <span>{chapterSortAsc ? "Mới nhất" : "Cũ nhất"}</span>
               </button>
             </div>
 

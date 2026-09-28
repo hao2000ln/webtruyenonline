@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { StoryCardData } from "@/db/queries/stories";
 import { formatCompactNumber } from "@/lib/format";
+import { Trophy } from "lucide-react";
 
 type RankingLeaderboardProps = {
   stories: StoryCardData[];
@@ -13,7 +14,9 @@ export function RankingLeaderboard({ stories }: RankingLeaderboardProps) {
     <section className="rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-xs">
       <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
         <div className="flex items-center gap-2.5">
-          <span className="h-5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+            <Trophy className="w-4 h-4" />
+          </div>
           <div>
             <span className="text-[10px] font-bold uppercase tracking-widest text-amber-600 block">
               BẢNG VÀNG

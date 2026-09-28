@@ -5,6 +5,7 @@ import { LatestUpdatesFeed } from "@/components/home/latest-updates-feed";
 import { RankingLeaderboard } from "@/components/home/ranking-leaderboard";
 import { CompletedShowcase } from "@/components/home/completed-showcase";
 import { getHomepageStories } from "@/db/queries/stories";
+import { LayoutGrid, Lightbulb } from "lucide-react";
 
 export const revalidate = 60;
 
@@ -37,7 +38,9 @@ export default async function HomePage() {
               <div className="rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-xs">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
                   <div className="flex items-center gap-2.5">
-                    <span className="h-5 w-1.5 rounded-full bg-[#0f766e]" aria-hidden="true" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-teal-50 text-[#0f766e]">
+                      <LayoutGrid className="w-4 h-4" />
+                    </div>
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-widest text-[#0f766e] block">
                         DANH MỤC
@@ -64,7 +67,7 @@ export default async function HomePage() {
             {/* Reading tip card */}
             <div className="rounded-3xl border border-teal-200/60 bg-gradient-to-br from-teal-500/10 via-emerald-500/5 to-transparent p-5 sm:p-6">
               <div className="flex items-center gap-2 text-teal-800 text-xs font-bold uppercase tracking-wider">
-                <span>💡</span>
+                <Lightbulb className="w-4 h-4 text-teal-700" />
                 <span>Mẹo đọc truyện</span>
               </div>
               <h3 className="mt-2 text-sm font-bold text-slate-900">
