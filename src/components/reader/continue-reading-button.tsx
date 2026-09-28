@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { GUEST_HISTORY_EVENT, readGuestHistory, type GuestHistoryRecord } from "@/lib/reader-storage";
 
+import { BookOpen } from "lucide-react";
+
 type ContinueReadingButtonProps = {
   storySlug: string;
   firstChapterHref: string;
@@ -29,9 +31,9 @@ export function ContinueReadingButton({ storySlug, firstChapterHref }: ContinueR
   return (
     <Link
       href={history?.href ?? firstChapterHref}
-      className="flex items-center justify-center gap-2 rounded-xl bg-[#0f766e] px-5 py-3 text-sm font-bold text-white shadow-xs transition hover:bg-[#115e59] active:scale-98" style={{ color: "#fff" }}
+      className="flex items-center justify-center gap-2 rounded-xl bg-[#0f766e] px-6 py-3.5 text-sm font-bold text-white shadow-md shadow-teal-700/20 transition hover:bg-[#115e59] active:scale-95"
     >
-      <span>📖</span>
+      <BookOpen className="w-4 h-4" />
       <span>{history ? `Đọc tiếp chương ${history.chapterNumber}` : "Đọc từ đầu"}</span>
     </Link>
   );

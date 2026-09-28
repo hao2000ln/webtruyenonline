@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { Search, Bell, Menu, X, Clock } from "lucide-react";
 
 const navigation = [
   { href: "/", label: "Trang chủ" },
@@ -15,15 +16,6 @@ const navigation = [
 
 function isActivePath(pathname: string, href: string) {
   return href === "/" ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
-}
-
-function SearchIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <circle cx="11" cy="11" r="7" />
-      <path strokeLinecap="round" d="m16 16 4 4" />
-    </svg>
-  );
 }
 
 function Brand() {
@@ -58,13 +50,13 @@ export function SiteHeader() {
                   key={item.href}
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={`whitespace-nowrap rounded-lg px-3.5 py-2 text-sm transition ${active
+                  className={`flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 py-2 text-sm transition ${active
                       ? "font-bold text-[#0f766e] bg-teal-50/70 color-primary"
                       : "text-slate-600 hover:text-[#0f766e] hover:bg-slate-50"
                     }`}
                 >
-                  {item.label === "Lịch sử" && <span className="mr-1.5 opacity-70">🕒</span>}
-                  {item.label}
+                  {item.label === "Lịch sử" && <Clock className="w-3.5 h-3.5 opacity-70" />}
+                  <span>{item.label}</span>
                 </Link>
               );
             })}
@@ -83,8 +75,8 @@ export function SiteHeader() {
               placeholder="Tìm truyện, tác giả..."
               className="h-10 w-full rounded-full border border-slate-200/80 bg-slate-100/80 py-2 pl-9 pr-4 text-xs text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#0f766e] focus:bg-white focus:ring-2 focus:ring-teal-700/10"
             />
-            <span className="pointer-events-none absolute left-3.5 top-3 text-xs text-slate-400">
-              🔍
+            <span className="pointer-events-none absolute left-3.5 top-3 text-slate-400">
+              <Search className="w-3.5 h-3.5" />
             </span>
           </form>
 
@@ -94,7 +86,7 @@ export function SiteHeader() {
             aria-label="Thông báo"
             title="Thông báo"
           >
-            <span className="text-sm">🔔</span>
+            <Bell className="w-4 h-4 text-slate-600" />
             <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" />
           </Link>
 
@@ -107,9 +99,9 @@ export function SiteHeader() {
             aria-label={mobileMenuOpen ? "Đóng menu" : "Mở menu"}
           >
             {mobileMenuOpen ? (
-              <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path strokeLinecap="round" d="m6 6 12 12M18 6 6 18" /></svg>
+              <X className="size-5" />
             ) : (
-              <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16" /></svg>
+              <Menu className="size-5" />
             )}
           </button>
         </div>
@@ -128,7 +120,7 @@ export function SiteHeader() {
                 className="h-11 w-full rounded-lg border border-ui-border bg-slate-50 py-2 pl-3 pr-11 text-sm outline-none transition placeholder:text-content-muted focus:border-primary focus:bg-white"
               />
               <button type="submit" className="absolute right-0 top-0 flex size-11 items-center justify-center text-content-muted transition hover:text-primary" aria-label="Tìm kiếm">
-                <SearchIcon />
+                <Search className="size-4" />
               </button>
             </form>
             <nav className="grid grid-cols-2 gap-2" aria-label="Điều hướng mobile">

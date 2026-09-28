@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRef } from "react";
 import type { ChapterSort } from "@/db/queries/stories";
+import { Search } from "lucide-react";
 
 type ChapterFiltersProps = {
   pathname: string;
@@ -23,7 +24,7 @@ export function ChapterFilters({ pathname, query, sort }: ChapterFiltersProps) {
     >
       <div className="relative flex-1">
         <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
-          🔍
+          <Search className="w-4 h-4 text-slate-400" />
         </span>
         <label htmlFor="chapter-query" className="sr-only">
           Tìm theo số chương hoặc tiêu đề
@@ -35,7 +36,7 @@ export function ChapterFilters({ pathname, query, sort }: ChapterFiltersProps) {
           defaultValue={query}
           maxLength={100}
           placeholder="Nhập số chương hoặc tiêu đề..."
-          className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50/70 pl-9 pr-4 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:bg-white focus:ring-2 focus:ring-teal-600/15"
+          className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50/70 pl-10 pr-4 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:bg-white focus:ring-2 focus:ring-teal-600/15"
         />
       </div>
 
@@ -60,8 +61,8 @@ export function ChapterFilters({ pathname, query, sort }: ChapterFiltersProps) {
           type="submit"
           className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-[#0f766e] px-6 text-sm font-bold text-white shadow-xs transition hover:bg-[#115e59] active:scale-98"
         >
-          <span>▼</span>
-          <span>Tìm chương</span>
+          <Search className="w-4 h-4" />
+          <span>Tìm</span>
         </button>
         {query ? (
           <Link

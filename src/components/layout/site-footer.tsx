@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronRight, Smartphone } from "lucide-react";
 
 const exploreLinks = [
   { href: "/", label: "Trang chủ" },
@@ -67,9 +68,9 @@ export function SiteFooter() {
             <ul className="space-y-2.5 text-xs">
               {exploreLinks.map((item) => (
                 <li key={item.href}>
-                  <Link href={item.href} className="flex items-center gap-2 transition hover:text-teal-400">
-                    <span className="text-teal-500" aria-hidden="true">›</span>
-                    {item.label}
+                  <Link href={item.href} className="flex items-center gap-1.5 transition hover:text-teal-400">
+                    <ChevronRight className="w-3.5 h-3.5 text-teal-500 shrink-0" />
+                    <span>{item.label}</span>
                   </Link>
                 </li>
               ))}
@@ -102,7 +103,7 @@ export function SiteFooter() {
               href="/"
               className="flex items-center justify-center gap-2 rounded-xl bg-[#0f766e] px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-[#115e59]"
             >
-              <span>📱</span>
+              <Smartphone className="w-4 h-4" />
               <span>Ứng dụng Mộc Thư</span>
             </Link>
           </section>
