@@ -41,7 +41,7 @@ cp .env.example .env.local
 DATABASE_URL=
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=http://localhost:3003
 ```
 
 `SUPABASE_SERVICE_ROLE_KEY` chỉ dùng ở server khi có nghiệp vụ cần quyền quản trị. Không đưa key này vào client hoặc đặt tiền tố `NEXT_PUBLIC_`.
@@ -61,13 +61,63 @@ npm run db:migrate
 npm run dev
 ```
 
-Mở http://localhost:3000
+Mở http://localhost:3003
 
-## Routes ban đầu
+## 6. Tạo tài khoản Admin
+
+Tạo user email/password trong Supabase Auth, sau đó gán role vào `app_metadata`
+bằng SQL Editor (thay email mẫu bằng email quản trị thật):
+
+```sql
+update auth.users
+set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb)
+  || '{"role":"admin"}'::jsonb
+where email = 'admin@example.com';
+```
+
+Đăng nhập tại `http://localhost:3003/admin/login`. Ứng dụng chỉ đọc role từ
+`app_metadata`, không dùng `user_metadata` để phân quyền và không đưa
+`SUPABASE_SERVICE_ROLE_KEY` xuống client.
+
+## 7. Xác nhận email cho tài khoản độc giả
+
+Trong Supabase Dashboard, đặt **Site URL** đúng với `NEXT_PUBLIC_APP_URL` và
+đổi template **Confirm signup** sang đường dẫn SSR:
+
+```html
+<a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email">
+  Xác nhận email
+</a>
+```
+
+Migration `0003_user_self_service_policies.sql` tạo profile khi user đăng ký và
+giới hạn `profiles`, `reading_history`, `follows` theo `auth.uid()`.
+
+## Cấu trúc ứng dụng
+
+Public/User App dùng layout header + content + footer:
 
 - `/`
 - `/truyen/[slug]`
 - `/truyen/[slug]/chuong-[chapter]`
 - `/the-loai`
 - `/tim-kiem`
+- `/lich-su`
+- `/dang-nhap`
+- `/dang-ky`
+- `/tai-khoan`
+- `/theo-doi`
+
+Admin App dùng layout sidebar + topbar riêng:
+
 - `/admin`
+- `/admin/login`
+- `/admin/stories`
+- `/admin/chapters`
+- `/admin/authors`
+- `/admin/genres`
+- `/admin/import`
+
+Mọi Server Action hoặc Route Handler thay đổi dữ liệu Admin phải gọi
+`requireAdmin()` trước khi thực hiện mutation. Không dựa riêng vào Proxy hoặc
+trạng thái ẩn/hiện của giao diện.

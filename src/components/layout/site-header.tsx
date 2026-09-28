@@ -9,6 +9,8 @@ const navigation = [
   { href: "/the-loai", label: "Thể loại" },
   { href: "/tim-kiem", label: "Tìm truyện" },
   { href: "/lich-su", label: "Lịch sử" },
+  { href: "/theo-doi", label: "Theo dõi" },
+  { href: "/tai-khoan", label: "Tài khoản" },
 ] as const;
 
 function isActivePath(pathname: string, href: string) {
@@ -26,7 +28,7 @@ function SearchIcon() {
 
 function Brand() {
   return (
-    <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="Mộc Thư - Trang chủ">
+    <Link href="/" className="flex shrink-0 items-center gap-2.5 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary" aria-label="Mộc Thư - Trang chủ">
       <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-lg font-bold text-white shadow-sm" aria-hidden="true">M</span>
       <span className="text-xl font-bold tracking-tight text-content">Mộc Thư</span>
     </Link>
@@ -42,7 +44,7 @@ export function SiteHeader() {
       <div className="site-container flex h-16 items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-8">
           <Brand />
-          <nav className="hidden items-center gap-6 md:flex" aria-label="Điều hướng chính">
+          <nav className="hidden items-center gap-2 md:flex xl:gap-4" aria-label="Điều hướng chính">
             {navigation.map((item) => {
               const active = isActivePath(pathname, item.href);
               return (
@@ -50,7 +52,7 @@ export function SiteHeader() {
                   key={item.href}
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={`whitespace-nowrap text-sm transition hover:text-primary ${active ? "font-semibold text-primary" : "font-medium text-slate-600"}`}
+                  className={`whitespace-nowrap rounded-lg px-3 py-2 text-sm transition-colors hover:text-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${active ? "font-semibold text-primary color-primary" : "font-medium text-slate-600"}`}
                 >
                   {item.label}
                 </Link>
@@ -76,7 +78,7 @@ export function SiteHeader() {
         <button
           type="button"
           onClick={() => setMobileMenuOpen((open) => !open)}
-          className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-ui-border text-content-secondary transition hover:border-primary hover:text-primary md:hidden"
+          className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-ui-border text-content-secondary transition hover:border-primary hover:bg-primary-soft hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:hidden"
           aria-expanded={mobileMenuOpen}
           aria-controls="mobile-navigation"
           aria-label={mobileMenuOpen ? "Đóng menu" : "Mở menu"}
@@ -114,7 +116,7 @@ export function SiteHeader() {
                     href={item.href}
                     onClick={() => setMobileMenuOpen(false)}
                     aria-current={active ? "page" : undefined}
-                    className={`rounded-lg px-3 py-2.5 text-sm transition hover:bg-primary-soft hover:text-primary ${active ? "bg-primary-soft font-semibold text-primary" : "font-medium text-content-secondary"}`}
+                    className={`rounded-lg px-3 py-2.5 text-sm transition-colors hover:text-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${active ? "font-semibold text-primary" : "font-medium text-content-secondary"}`}
                   >
                     {item.label}
                   </Link>

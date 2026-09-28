@@ -1,8 +1,5 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteHeader } from "@/components/layout/site-header";
-import { ScrollTopButton } from "@/components/ui/scroll-top-button";
 import "./globals.css";
 
 const inter = localFont({
@@ -34,12 +31,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="vi">
-      <body className={inter.variable}>
-        <SiteHeader />
-        {children}
-        <SiteFooter />
-        <ScrollTopButton />
-      </body>
+      <body className={inter.variable}>{children}</body>
     </html>
   );
 }

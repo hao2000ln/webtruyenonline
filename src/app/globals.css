@@ -47,6 +47,12 @@ button, input, select, textarea { font: inherit; }
 button, select { cursor: pointer; }
 ::selection { background: var(--primary-soft); color: var(--primary-hover); }
 
+.color-primary {
+  color: var(--primary)
+}
+.text-primary-hover{
+  color:var(--primary-hover)
+}
 .site-container {
   width: 100%;
   max-width: 1200px;

@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { and, asc, desc, eq, gt, lt, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, ilike, lt, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import { authors, chapters, genres, stories, storyGenres } from "@/db/schema";
 
@@ -28,6 +28,9 @@ async function selectStoryCards(where: SQL, orderBy: SQL, limit = 5) {
 }
 
 export type StoryCardData = Awaited<ReturnType<typeof selectStoryCards>>[number];
+
+export const CHAPTERS_PER_PAGE = 50;
+export type ChapterSort = "newest" | "oldest";
 
 export const getHomepageStories = cache(async () => {
   const published = eq(stories.isPublished, true);
@@ -81,27 +84,87 @@ export const getStoryDetail = cache(async (slug: string) => {
     .where(eq(storyGenres.storyId, story.id))
     .orderBy(asc(genres.name));
 
+  const [firstChapter] = await db
+    .select({ number: chapters.chapterNumber, title: chapters.title })
+    .from(chapters)
+    .where(and(eq(chapters.storyId, story.id), eq(chapters.isPublished, true)))
+    .orderBy(asc(chapters.chapterNumber))
+    .limit(1);
+
+  const [latestChapter] = await db
+    .select({ number: chapters.chapterNumber, title: chapters.title })
+    .from(chapters)
+    .where(and(eq(chapters.storyId, story.id), eq(chapters.isPublished, true)))
+    .orderBy(desc(chapters.chapterNumber))
+    .limit(1);
+
+  return {
+    ...story,
+    genres: storyGenreRows,
+    firstChapter: firstChapter ?? null,
+    latestChapter: latestChapter ?? null,
+  };
+});
+
+export async function getStoryChapters(
+  storyId: string,
+  query: string,
+  sort: ChapterSort,
+  requestedPage: number,
+) {
+  const normalizedQuery = query.trim().slice(0, 100);
+  const safePage = Number.isSafeInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+  const conditions: SQL[] = [
+    eq(chapters.storyId, storyId),
+    eq(chapters.isPublished, true),
+  ];
+
+  if (normalizedQuery) {
+    const pattern = `%${normalizedQuery}%`;
+    const searchCondition = or(
+      ilike(chapters.title, pattern),
+      sql`${chapters.chapterNumber}::text ilike ${pattern}`,
+    );
+    if (searchCondition) conditions.push(searchCondition);
+  }
+
+  const where = and(...conditions)!;
+  const [countRow] = await db
+    .select({ total: count() })
+    .from(chapters)
+    .where(where);
+
+  const total = countRow?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / CHAPTERS_PER_PAGE));
+  const page = Math.min(safePage, totalPages);
+  const chapterOrder = sort === "oldest"
+    ? asc(chapters.chapterNumber)
+    : desc(chapters.chapterNumber);
+
   const chapterRows = await db
     .select({
       id: chapters.id,
       number: chapters.chapterNumber,
       title: chapters.title,
-      slug: chapters.slug,
       publishedAt: chapters.publishedAt,
       wordCount: chapters.wordCount,
     })
     .from(chapters)
-    .where(and(eq(chapters.storyId, story.id), eq(chapters.isPublished, true)))
-    .orderBy(asc(chapters.chapterNumber));
+    .where(where)
+    .orderBy(chapterOrder, asc(chapters.id))
+    .limit(CHAPTERS_PER_PAGE)
+    .offset((page - 1) * CHAPTERS_PER_PAGE);
 
   return {
-    ...story,
-    genres: storyGenreRows,
     chapters: chapterRows,
-    firstChapter: chapterRows.at(0) ?? null,
-    latestChapter: chapterRows.at(-1) ?? null,
+    query: normalizedQuery,
+    sort,
+    page,
+    total,
+    totalPages,
+    pageSize: CHAPTERS_PER_PAGE,
   };
-});
+}
 
 export const getChapterForReader = cache(async (storySlug: string, chapterNumber: string) => {
   if (!/^\d+(?:\.\d{1,3})?$/.test(chapterNumber)) {
