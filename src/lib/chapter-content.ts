@@ -23,6 +23,13 @@ const chapterContentOptions: sanitizeHtml.IOptions = {
   allowedAttributes: {
     a: ["href"],
     li: ["data-list"],
+    p: ["style"],
+    span: ["style"],
+  },
+  allowedStyles: {
+    '*': {
+      'line-height': [/^1(?:\.\d+)?$/, /^2(?:\.\d+)?$/, /^3(?:\.\d+)?$/],
+    }
   },
   allowedSchemes: ["http", "https", "mailto"],
   allowProtocolRelative: false,

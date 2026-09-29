@@ -10,61 +10,43 @@ export async function getAdminDashboard() {
     or(isNull(stories.latestChapterAt), lt(stories.latestChapterAt, staleBefore)),
   );
 
-  // Chunk queries to avoid exhausting DB connection pool (max 10) and Supabase limits (15)
-  const [
-    [storyCount],
-    [chapterCount],
-    [authorCount],
-    [genreCount],
-  ] = await Promise.all([
-    db.select({ value: count() }).from(stories),
-    db.select({ value: count() }).from(chapters),
-    db.select({ value: count() }).from(authors),
-    db.select({ value: count() }).from(genres),
-  ]);
+  // Execute sequentially to use exactly 1 DB connection and avoid timeouts
+  const [storyCount] = await db.select({ value: count() }).from(stories);
+  const [chapterCount] = await db.select({ value: count() }).from(chapters);
+  const [authorCount] = await db.select({ value: count() }).from(authors);
+  const [genreCount] = await db.select({ value: count() }).from(genres);
 
-  const [
-    [publishedStories],
-    [publishedChapters],
-    [totalViews],
-    [staleStoryCount],
-  ] = await Promise.all([
-    db.select({ value: count() }).from(stories).where(eq(stories.isPublished, true)),
-    db.select({ value: count() }).from(chapters).where(eq(chapters.isPublished, true)),
-    db.select({ value: sql<string>`coalesce(sum(${stories.viewCount}), 0)` }).from(stories),
-    db.select({ value: count() }).from(stories).where(staleCondition),
-  ]);
+  const [publishedStories] = await db.select({ value: count() }).from(stories).where(eq(stories.isPublished, true));
+  const [publishedChapters] = await db.select({ value: count() }).from(chapters).where(eq(chapters.isPublished, true));
+  const [totalViews] = await db.select({ value: sql<string>`coalesce(sum(${stories.viewCount}), 0)` }).from(stories);
+  const [staleStoryCount] = await db.select({ value: count() }).from(stories).where(staleCondition);
 
-  const [
-    topStories,
-    staleStories,
-    recentStories,
-    recentChapters,
-  ] = await Promise.all([
-    db
-      .select({ id: stories.id, title: stories.title, viewCount: stories.viewCount, totalChapters: stories.totalChapters })
-      .from(stories)
-      .where(eq(stories.isPublished, true))
-      .orderBy(desc(stories.viewCount), asc(stories.title))
-      .limit(5),
-    db
-      .select({ id: stories.id, title: stories.title, latestChapterAt: stories.latestChapterAt, totalChapters: stories.totalChapters })
-      .from(stories)
-      .where(staleCondition)
-      .orderBy(asc(stories.latestChapterAt), asc(stories.title))
-      .limit(5),
-    db
-      .select({ id: stories.id, title: stories.title, slug: stories.slug, updatedAt: stories.updatedAt, isPublished: stories.isPublished })
-      .from(stories)
-      .orderBy(desc(stories.updatedAt))
-      .limit(5),
-    db
-      .select({ id: chapters.id, title: chapters.title, number: chapters.chapterNumber, storyTitle: stories.title, updatedAt: chapters.updatedAt })
-      .from(chapters)
-      .innerJoin(stories, eq(chapters.storyId, stories.id))
-      .orderBy(desc(chapters.updatedAt))
-      .limit(5),
-  ]);
+  const topStories = await db
+    .select({ id: stories.id, title: stories.title, viewCount: stories.viewCount, totalChapters: stories.totalChapters })
+    .from(stories)
+    .where(eq(stories.isPublished, true))
+    .orderBy(desc(stories.viewCount), asc(stories.title))
+    .limit(5);
+
+  const staleStories = await db
+    .select({ id: stories.id, title: stories.title, latestChapterAt: stories.latestChapterAt, totalChapters: stories.totalChapters })
+    .from(stories)
+    .where(staleCondition)
+    .orderBy(asc(stories.latestChapterAt), asc(stories.title))
+    .limit(5);
+
+  const recentStories = await db
+    .select({ id: stories.id, title: stories.title, slug: stories.slug, updatedAt: stories.updatedAt, isPublished: stories.isPublished })
+    .from(stories)
+    .orderBy(desc(stories.updatedAt))
+    .limit(5);
+
+  const recentChapters = await db
+    .select({ id: chapters.id, title: chapters.title, number: chapters.chapterNumber, storyTitle: stories.title, updatedAt: chapters.updatedAt })
+    .from(chapters)
+    .innerJoin(stories, eq(chapters.storyId, stories.id))
+    .orderBy(desc(chapters.updatedAt))
+    .limit(5);
 
   return {
     stats: {

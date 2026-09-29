@@ -139,10 +139,30 @@ button, select { cursor: pointer; }
 .reader-content > div p + p { margin-top: 1.35em; }
 
 .chapter-quill .ql-toolbar { border: 0; border-bottom: 1px solid var(--border); background: #f8fafc; }
-.chapter-quill .ql-container { min-height: 300px; border: 0; font-family: var(--font-inter), Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.75; }
-.chapter-quill .ql-editor { min-height: 300px; padding: 16px; }
+.chapter-quill .ql-container { height: 65vh; min-height: 500px; border: 0; font-family: var(--font-inter), Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.75; }
+.chapter-quill .ql-editor { height: 100%; padding: 16px; overflow-y: auto; }
 .chapter-quill .ql-editor.ql-blank::before { color: var(--text-muted); font-style: normal; }
 .chapter-preview p + p { margin-top: 1.35em; }
+
+/* Custom Quill Line Height Picker */
+.ql-snow .ql-picker.ql-lineHeight { width: 95px; }
+.ql-snow .ql-picker.ql-lineHeight .ql-picker-label::before,
+.ql-snow .ql-picker.ql-lineHeight .ql-picker-item::before { content: 'Giãn dòng'; }
+.ql-snow .ql-picker.ql-lineHeight .ql-picker-label[data-value="1.0"]::before,
+.ql-snow .ql-picker.ql-lineHeight .ql-picker-item[data-value="1.0"]::before { content: '1.0'; }
+.ql-snow .ql-picker.ql-lineHeight .ql-picker-label[data-value="1.2"]::before,
+.ql-snow .ql-picker.ql-lineHeight .ql-picker-item[data-value="1.2"]::before { content: '1.2'; }
+.ql-snow .ql-picker.ql-lineHeight .ql-picker-label[data-value="1.5"]::before,
+.ql-snow .ql-picker.ql-lineHeight .ql-picker-item[data-value="1.5"]::before { content: '1.5'; }
+.ql-snow .ql-picker.ql-lineHeight .ql-picker-label[data-value="1.75"]::before,
+.ql-snow .ql-picker.ql-lineHeight .ql-picker-item[data-value="1.75"]::before { content: '1.75'; }
+.ql-snow .ql-picker.ql-lineHeight .ql-picker-label[data-value="2.0"]::before,
+.ql-snow .ql-picker.ql-lineHeight .ql-picker-item[data-value="2.0"]::before { content: '2.0'; }
+.ql-snow .ql-picker.ql-lineHeight .ql-picker-label[data-value="2.5"]::before,
+.ql-snow .ql-picker.ql-lineHeight .ql-picker-item[data-value="2.5"]::before { content: '2.5'; }
+.ql-snow .ql-picker.ql-lineHeight .ql-picker-label[data-value="3.0"]::before,
+.ql-snow .ql-picker.ql-lineHeight .ql-picker-item[data-value="3.0"]::before { content: '3.0'; }
+
 .reader-container { width: 100%; max-width: min(var(--reader-content-width, 760px), 100%); }
 
 .reader-shell {
