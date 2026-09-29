@@ -76,6 +76,7 @@ export function ChapterForm({ action, stories, chapter }: Props) {
           toolbar: [
             [{ header: [2, 3, false] }],
             ["bold", "italic", "underline"],
+            [{ color: [] }, { background: [] }],
             [{ lineHeight: ["1.0", "1.2", "1.5", "1.75", "2.0", "2.5", "3.0"] }],
             [{ list: "ordered" }, { list: "bullet" }],
             ["blockquote", "link"],

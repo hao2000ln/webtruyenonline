@@ -29,6 +29,8 @@ const chapterContentOptions: sanitizeHtml.IOptions = {
   allowedStyles: {
     '*': {
       'line-height': [/^1(?:\.\d+)?$/, /^2(?:\.\d+)?$/, /^3(?:\.\d+)?$/],
+      'color': [/^.*$/],
+      'background-color': [/^.*$/],
     }
   },
   allowedSchemes: ["http", "https", "mailto"],

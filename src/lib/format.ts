@@ -25,6 +25,14 @@ export function getStoryStatusLabel(status: "ONGOING" | "COMPLETED" | "HIATUS") 
   }[status];
 }
 
+export function getStoryStatusColor(status: "ONGOING" | "COMPLETED" | "HIATUS") {
+  return {
+    ONGOING: "text-blue-600",
+    COMPLETED: "text-emerald-600",
+    HIATUS: "text-amber-600",
+  }[status];
+}
+
 export function formatChapterNumber(value: string) {
   const [integer, decimal = ""] = value.split(".");
   const trimmedDecimal = decimal.replace(/0+$/, "");

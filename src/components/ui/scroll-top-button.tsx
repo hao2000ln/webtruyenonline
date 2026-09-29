@@ -3,11 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 
 const SHOW_AFTER_PX = 480;
-const SCROLL_DURATION_MS = 1_000;
 
 export function ScrollTopButton() {
   const [isVisible, setIsVisible] = useState(false);
-  const animationFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
     const updateVisibility = () => setIsVisible(window.scrollY >= SHOW_AFTER_PX);
@@ -16,9 +14,6 @@ export function ScrollTopButton() {
     window.addEventListener("scroll", updateVisibility, { passive: true });
     return () => {
       window.removeEventListener("scroll", updateVisibility);
-      if (animationFrameRef.current !== null) {
-        window.cancelAnimationFrame(animationFrameRef.current);
-      }
     };
   }, []);
 
@@ -26,31 +21,10 @@ export function ScrollTopButton() {
 
   const scrollToTop = () => {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduceMotion) {
-      window.scrollTo({ top: 0, behavior: "auto" });
-      return;
-    }
-
-    if (animationFrameRef.current !== null) {
-      window.cancelAnimationFrame(animationFrameRef.current);
-    }
-
-    const startY = window.scrollY;
-    const startedAt = performance.now();
-
-    const animate = (currentTime: number) => {
-      const progress = Math.min((currentTime - startedAt) / SCROLL_DURATION_MS, 1);
-      const easedProgress = 1 - Math.pow(1 - progress, 3);
-      window.scrollTo(0, startY * (1 - easedProgress));
-
-      if (progress < 1) {
-        animationFrameRef.current = window.requestAnimationFrame(animate);
-      } else {
-        animationFrameRef.current = null;
-      }
-    };
-
-    animationFrameRef.current = window.requestAnimationFrame(animate);
+    window.scrollTo({
+      top: 0,
+      behavior: reduceMotion ? "auto" : "smooth",
+    });
   };
 
   return (

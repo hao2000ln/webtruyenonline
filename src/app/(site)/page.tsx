@@ -60,6 +60,12 @@ export default async function HomePage() {
                       {genre.name}
                     </Link>
                   ))}
+                  <Link
+                    href="/the-loai"
+                    className="flex items-center rounded-xl border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-bold text-teal-800 transition hover:bg-teal-100 hover:text-teal-900"
+                  >
+                    Tất cả &rarr;
+                  </Link>
                 </div>
               </div>
             )}

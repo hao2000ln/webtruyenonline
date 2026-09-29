@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { StoryCardData } from "@/db/queries/stories";
-import { formatCompactNumber } from "@/lib/format";
+import { formatCompactNumber, getStoryStatusLabel, getStoryStatusColor } from "@/lib/format";
 import { Trophy } from "lucide-react";
 
 type RankingLeaderboardProps = {
@@ -59,9 +59,19 @@ export function RankingLeaderboard({ stories }: RankingLeaderboardProps) {
                   <h3 className="line-clamp-1 text-xs font-bold text-slate-800 transition group-hover:text-[#0f766e]">
                     {story.title}
                   </h3>
-                  <p className="text-[11px] text-slate-400 line-clamp-1">
-                    {story.authorName ?? "Khuyết danh"}
-                  </p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <p className="text-[11px] text-slate-400 line-clamp-1">
+                      {story.authorName ?? "Khuyết danh"}
+                    </p>
+                    {rank <= 3 && (
+                      <>
+                        <span className="text-[10px] text-slate-300">•</span>
+                        <span className={`text-[10px] font-bold ${getStoryStatusColor(story.status)}`}>
+                          {getStoryStatusLabel(story.status)}
+                        </span>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
 

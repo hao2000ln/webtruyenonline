@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { StoryCover } from "@/components/story/story-cover";
 import type { StoryCardData } from "@/db/queries/stories";
-import { formatCompactNumber, getStoryStatusLabel } from "@/lib/format";
+import { formatCompactNumber, getStoryStatusLabel, getStoryStatusColor } from "@/lib/format";
 import { ArrowRight, Flame } from "lucide-react";
 
 type FeaturedBookGridProps = {
@@ -63,11 +63,7 @@ export function FeaturedBookGrid({ stories }: FeaturedBookGridProps) {
             </div>
 
             <div className="mt-2.5 flex items-center justify-between border-t border-slate-100 pt-2 text-[10px] text-slate-400">
-              <span
-                className={`font-semibold ${
-                  story.status === "COMPLETED" ? "text-emerald-600" : "text-teal-700"
-                }`}
-              >
+              <span className={`font-semibold ${getStoryStatusColor(story.status)}`}>
                 {getStoryStatusLabel(story.status)}
               </span>
               <span>{formatCompactNumber(story.viewCount)} đọc</span>

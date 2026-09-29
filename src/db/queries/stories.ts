@@ -37,18 +37,19 @@ export const getHomepageStories = cache(async () => {
 
   // Run homepage queries in parallel for high throughput and minimum latency
   const [latestUpdated, newest, hot, completed, allGenres] = await Promise.all([
-    selectStoryCards(published, desc(stories.latestChapterAt), 8),
-    selectStoryCards(published, desc(stories.publishedAt), 6),
-    selectStoryCards(published, desc(stories.viewCount), 10),
+    selectStoryCards(published, desc(stories.latestChapterAt), 6),
+    selectStoryCards(published, desc(stories.publishedAt), 8),
+    selectStoryCards(published, desc(stories.viewCount), 6),
     selectStoryCards(
       and(published, eq(stories.status, "COMPLETED"))!,
       desc(stories.latestChapterAt),
-      6,
+      4,
     ),
     db
       .select({ id: genres.id, name: genres.name, slug: genres.slug })
       .from(genres)
-      .orderBy(asc(genres.name)),
+      .orderBy(asc(genres.name))
+      .limit(15),
   ]);
 
   return { latestUpdated, newest, hot, completed, allGenres };
