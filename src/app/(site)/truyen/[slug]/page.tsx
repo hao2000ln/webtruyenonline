@@ -6,7 +6,7 @@ import { ChapterFilters } from "@/components/story/chapter-filters";
 import { FollowButton } from "@/components/story/follow-button";
 import { HeroStoryCover } from "@/components/story/story-cover";
 import { getStoryChapters, getStoryDetail, type ChapterSort } from "@/db/queries/stories";
-import { formatChapterNumber, formatCompactNumber, formatDate, formatReadingTime, getStoryStatusLabel } from "@/lib/format";
+import { formatChapterNumber, formatCompactNumber, formatDate, formatReadingTime, getStoryStatusLabel, getStoryStatusColor } from "@/lib/format";
 import { Pagination } from "@/components/ui/pagination";
 import { BookOpen, Eye, Calendar, Clock, Zap } from "lucide-react";
 
@@ -121,8 +121,7 @@ export default async function StoryDetailPage({ params, searchParams }: Props) {
             <div>
               {/* Badges & Tags Row */}
               <div className="flex flex-wrap items-center gap-2 mb-3">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse" />
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${getStoryStatusColor(story.status)} bg-slate-50 border border-slate-200/80 shadow-2xs`}>
                   {getStoryStatusLabel(story.status)}
                 </span>
 
@@ -181,18 +180,20 @@ export default async function StoryDetailPage({ params, searchParams }: Props) {
             </div>
 
             {/* CTA Action Buttons */}
-            <div className="flex flex-wrap items-center gap-3 pt-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
               {story.firstChapter ? (
-                <ContinueReadingButton
-                  storySlug={story.slug}
-                  firstChapterHref={`/truyen/${story.slug}/chuong-${formatChapterNumber(story.firstChapter.number)}`}
-                />
+                <div className="w-full sm:w-auto [&>a]:w-full [&>a]:justify-center">
+                  <ContinueReadingButton
+                    storySlug={story.slug}
+                    firstChapterHref={`/truyen/${story.slug}/chuong-${formatChapterNumber(story.firstChapter.number)}`}
+                  />
+                </div>
               ) : null}
 
               {story.latestChapter ? (
                 <Link
                   href={`/truyen/${story.slug}/chuong-${formatChapterNumber(story.latestChapter.number)}`}
-                  className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-sm font-semibold px-5 py-3.5 rounded-xl transition flex items-center space-x-2 hover:border-slate-300 shadow-2xs active:scale-95"
+                  className="w-full sm:w-auto justify-center bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-sm font-semibold px-5 py-3.5 rounded-xl transition flex items-center space-x-2 hover:border-slate-300 shadow-2xs active:scale-95"
                 >
                   <Zap className="w-4 h-4 text-amber-500 fill-amber-500/20" />
                   <span>Chương mới nhất</span>

@@ -331,7 +331,10 @@ export function ReaderExperience({
 
       <div className="reader-container mx-auto px-3 pt-16 pb-28 sm:px-4 sm:pt-20">
         {/* Story Content Paper */}
-        <article className="reader-paper rounded-2xl border px-4 py-8 shadow-sm transition-colors sm:px-10 sm:py-12">
+        <article 
+          onClick={() => setIsBarVisible((v) => !v)}
+          className="reader-paper rounded-2xl border px-4 py-8 shadow-sm transition-colors sm:px-10 sm:py-12"
+        >
           <header className="reader-heading-border border-b pb-6 text-center sm:pb-8">
             <Link
               href={`/truyen/${story.slug}`}
