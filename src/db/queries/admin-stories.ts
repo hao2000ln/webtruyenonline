@@ -43,6 +43,7 @@ export async function getAdminStories({
   const total = totalRow?.value ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / normalizedPageSize));
   const page = Math.min(normalizePage(requestedPage), totalPages);
+
   const rows = await db
     .select({
       id: stories.id,
@@ -66,14 +67,16 @@ export async function getAdminStories({
 }
 
 export async function getAdminStoryOptions() {
-  const authorRows = await db
-    .select({ id: authors.id, name: authors.name })
-    .from(authors)
-    .orderBy(asc(authors.name));
-  const genreRows = await db
-    .select({ id: genres.id, name: genres.name })
-    .from(genres)
-    .orderBy(asc(genres.name));
+  const [authorRows, genreRows] = await Promise.all([
+    db
+      .select({ id: authors.id, name: authors.name })
+      .from(authors)
+      .orderBy(asc(authors.name)),
+    db
+      .select({ id: genres.id, name: genres.name })
+      .from(genres)
+      .orderBy(asc(genres.name)),
+  ]);
   return { authors: authorRows, genres: genreRows };
 }
 

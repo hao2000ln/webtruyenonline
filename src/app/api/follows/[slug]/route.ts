@@ -26,7 +26,7 @@ async function getPublishedStory(slug: string) {
 
 export async function GET(_request: NextRequest, { params }: Context) {
   const user = await getRequestUser();
-  if (!user) return NextResponse.json({ followed: false }, { status: 401 });
+  if (!user) return NextResponse.json({ followed: false, guest: true });
 
   const { slug } = await params;
   const story = await getPublishedStory(slug);

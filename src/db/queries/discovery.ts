@@ -48,8 +48,9 @@ export const searchPublishedStories = cache(async (rawQuery: string, requestedPa
     .leftJoin(authors, eq(stories.authorId, authors.id))
     .where(filters);
 
-  const total = totalRow.value;
+  const total = totalRow?.value ?? 0;
   const pageMeta = getPageMeta(total, requestedPage);
+
   const result = await db
     .select(storyCardSelection)
     .from(stories)
@@ -106,9 +107,10 @@ export const getStoriesByGenre = cache(
       .innerJoin(stories, eq(storyGenres.storyId, stories.id))
       .where(filters);
 
-    const total = totalRow.value;
+    const total = totalRow?.value ?? 0;
     const pageMeta = getPageMeta(total, requestedPage);
     const orderBy = sort === "hot" ? desc(stories.viewCount) : desc(stories.latestChapterAt);
+
     const result = await db
       .select(storyCardSelection)
       .from(storyGenres)

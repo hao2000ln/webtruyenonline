@@ -1,0 +1,1 @@
+CREATE INDEX "chapters_nav_idx" ON "chapters" USING btree ("story_id","is_published","chapter_number");

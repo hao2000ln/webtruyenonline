@@ -35,20 +35,21 @@ export type ChapterSort = "newest" | "oldest";
 export const getHomepageStories = cache(async () => {
   const published = eq(stories.isPublished, true);
 
-  // Keep these sequential because one application instance intentionally uses
-  // a single pooled database connection.
-  const latestUpdated = await selectStoryCards(published, desc(stories.latestChapterAt), 8);
-  const newest = await selectStoryCards(published, desc(stories.publishedAt), 6);
-  const hot = await selectStoryCards(published, desc(stories.viewCount), 10);
-  const completed = await selectStoryCards(
-    and(published, eq(stories.status, "COMPLETED"))!,
-    desc(stories.latestChapterAt),
-    6,
-  );
-  const allGenres = await db
-    .select({ id: genres.id, name: genres.name, slug: genres.slug })
-    .from(genres)
-    .orderBy(asc(genres.name));
+  // Run homepage queries in parallel for high throughput and minimum latency
+  const [latestUpdated, newest, hot, completed, allGenres] = await Promise.all([
+    selectStoryCards(published, desc(stories.latestChapterAt), 8),
+    selectStoryCards(published, desc(stories.publishedAt), 6),
+    selectStoryCards(published, desc(stories.viewCount), 10),
+    selectStoryCards(
+      and(published, eq(stories.status, "COMPLETED"))!,
+      desc(stories.latestChapterAt),
+      6,
+    ),
+    db
+      .select({ id: genres.id, name: genres.name, slug: genres.slug })
+      .from(genres)
+      .orderBy(asc(genres.name)),
+  ]);
 
   return { latestUpdated, newest, hot, completed, allGenres };
 });
@@ -82,26 +83,27 @@ export const getStoryDetail = cache(async (slug: string) => {
     return null;
   }
 
-  const storyGenreRows = await db
-    .select({ id: genres.id, name: genres.name, slug: genres.slug })
-    .from(storyGenres)
-    .innerJoin(genres, eq(storyGenres.genreId, genres.id))
-    .where(eq(storyGenres.storyId, story.id))
-    .orderBy(asc(genres.name));
-
-  const [firstChapter] = await db
-    .select({ number: chapters.chapterNumber, title: chapters.title })
-    .from(chapters)
-    .where(and(eq(chapters.storyId, story.id), eq(chapters.isPublished, true)))
-    .orderBy(asc(chapters.chapterNumber))
-    .limit(1);
-
-  const [latestChapter] = await db
-    .select({ number: chapters.chapterNumber, title: chapters.title })
-    .from(chapters)
-    .where(and(eq(chapters.storyId, story.id), eq(chapters.isPublished, true)))
-    .orderBy(desc(chapters.chapterNumber))
-    .limit(1);
+  // Parallelize genres, first chapter, and latest chapter queries
+  const [storyGenreRows, [firstChapter], [latestChapter]] = await Promise.all([
+    db
+      .select({ id: genres.id, name: genres.name, slug: genres.slug })
+      .from(storyGenres)
+      .innerJoin(genres, eq(storyGenres.genreId, genres.id))
+      .where(eq(storyGenres.storyId, story.id))
+      .orderBy(asc(genres.name)),
+    db
+      .select({ number: chapters.chapterNumber, title: chapters.title })
+      .from(chapters)
+      .where(and(eq(chapters.storyId, story.id), eq(chapters.isPublished, true)))
+      .orderBy(asc(chapters.chapterNumber))
+      .limit(1),
+    db
+      .select({ number: chapters.chapterNumber, title: chapters.title })
+      .from(chapters)
+      .where(and(eq(chapters.storyId, story.id), eq(chapters.isPublished, true)))
+      .orderBy(desc(chapters.chapterNumber))
+      .limit(1),
+  ]);
 
   return {
     ...story,
@@ -134,17 +136,14 @@ export async function getStoryChapters(
   }
 
   const where = and(...conditions)!;
-  const [countRow] = await db
-    .select({ total: count() })
-    .from(chapters)
-    .where(where);
-
-  const total = countRow?.total ?? 0;
-  const totalPages = Math.max(1, Math.ceil(total / CHAPTERS_PER_PAGE));
-  const page = Math.min(safePage, totalPages);
   const chapterOrder = sort === "oldest"
     ? asc(chapters.chapterNumber)
     : desc(chapters.chapterNumber);
+
+  const [countRow] = await db.select({ total: count() }).from(chapters).where(where);
+  const total = countRow?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / CHAPTERS_PER_PAGE));
+  const page = Math.min(safePage, totalPages);
 
   const chapterRows = await db
     .select({
@@ -176,76 +175,81 @@ export const getChapterForReader = cache(async (storySlug: string, chapterNumber
     return null;
   }
 
-  const [story] = await db
-    .select({ id: stories.id, title: stories.title, slug: stories.slug })
-    .from(stories)
-    .where(and(eq(stories.slug, storySlug), eq(stories.isPublished, true)))
-    .limit(1);
-
-  if (!story) {
-    return null;
-  }
-
-  const [chapter] = await db
+  // Single JOIN query replaces 2 sequential round-trips
+  const [row] = await db
     .select({
-      id: chapters.id,
-      number: chapters.chapterNumber,
-      title: chapters.title,
-      content: chapters.content,
-      wordCount: chapters.wordCount,
-      publishedAt: chapters.publishedAt,
+      storyId: stories.id,
+      storyTitle: stories.title,
+      storySlug: stories.slug,
+      chapterId: chapters.id,
+      chapterNumber: chapters.chapterNumber,
+      chapterTitle: chapters.title,
+      chapterContent: chapters.content,
+      chapterWordCount: chapters.wordCount,
+      chapterPublishedAt: chapters.publishedAt,
     })
-    .from(chapters)
-    .where(
+    .from(stories)
+    .innerJoin(
+      chapters,
       and(
-        eq(chapters.storyId, story.id),
+        eq(chapters.storyId, stories.id),
         eq(chapters.chapterNumber, chapterNumber),
         eq(chapters.isPublished, true),
       ),
     )
+    .where(and(eq(stories.slug, storySlug), eq(stories.isPublished, true)))
     .limit(1);
 
-  if (!chapter) {
-    return null;
-  }
+  if (!row) return null;
 
-  const [previousChapter] = await db
-    .select({ number: chapters.chapterNumber, title: chapters.title })
-    .from(chapters)
-    .where(
-      and(
-        eq(chapters.storyId, story.id),
-        eq(chapters.isPublished, true),
-        lt(chapters.chapterNumber, chapter.number),
-      ),
-    )
-    .orderBy(desc(chapters.chapterNumber))
-    .limit(1);
-
-  const [nextChapter] = await db
-    .select({ number: chapters.chapterNumber, title: chapters.title })
-    .from(chapters)
-    .where(
-      and(
-        eq(chapters.storyId, story.id),
-        eq(chapters.isPublished, true),
-        gt(chapters.chapterNumber, chapter.number),
-      ),
-    )
-    .orderBy(asc(chapters.chapterNumber))
-    .limit(1);
-
-  const chapterList = await db
-    .select({ number: chapters.chapterNumber, title: chapters.title })
-    .from(chapters)
-    .where(and(eq(chapters.storyId, story.id), eq(chapters.isPublished, true)))
-    .orderBy(asc(chapters.chapterNumber));
+  // Run prev, next, and chapter list all in parallel
+  const [[previousChapter], [nextChapter], chapterList] = await Promise.all([
+    db
+      .select({ number: chapters.chapterNumber, title: chapters.title })
+      .from(chapters)
+      .where(
+        and(
+          eq(chapters.storyId, row.storyId),
+          eq(chapters.isPublished, true),
+          lt(chapters.chapterNumber, row.chapterNumber),
+        ),
+      )
+      .orderBy(desc(chapters.chapterNumber))
+      .limit(1),
+    db
+      .select({ number: chapters.chapterNumber, title: chapters.title })
+      .from(chapters)
+      .where(
+        and(
+          eq(chapters.storyId, row.storyId),
+          eq(chapters.isPublished, true),
+          gt(chapters.chapterNumber, row.chapterNumber),
+        ),
+      )
+      .orderBy(asc(chapters.chapterNumber))
+      .limit(1),
+    // Cap at 500 chapters for the drawer list – avoids sending megabytes for long series
+    db
+      .select({ number: chapters.chapterNumber, title: chapters.title })
+      .from(chapters)
+      .where(and(eq(chapters.storyId, row.storyId), eq(chapters.isPublished, true)))
+      .orderBy(asc(chapters.chapterNumber))
+      .limit(500),
+  ]);
 
   return {
-    story,
-    chapter,
+    story: { id: row.storyId, title: row.storyTitle, slug: row.storySlug },
+    chapter: {
+      id: row.chapterId,
+      number: row.chapterNumber,
+      title: row.chapterTitle,
+      content: row.chapterContent,
+      wordCount: row.chapterWordCount,
+      publishedAt: row.chapterPublishedAt,
+    },
     previousChapter: previousChapter ?? null,
     nextChapter: nextChapter ?? null,
     chapterList,
   };
 });
+

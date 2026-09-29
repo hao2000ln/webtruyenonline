@@ -67,6 +67,8 @@ export const chapters = pgTable("chapters", {
   uniqueIndex("chapters_story_number_uidx").on(table.storyId, table.chapterNumber),
   uniqueIndex("chapters_story_slug_uidx").on(table.storyId, table.slug),
   index("chapters_story_published_idx").on(table.storyId, table.publishedAt),
+  // Covers prev/next navigation queries: WHERE storyId=? AND isPublished=true AND chapterNumber </>?
+  index("chapters_nav_idx").on(table.storyId, table.isPublished, table.chapterNumber),
 ]);
 
 export const genres = pgTable("genres", {

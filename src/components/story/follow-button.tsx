@@ -16,13 +16,9 @@ export function FollowButton({ storySlug }: { storySlug: string }) {
     fetch(`/api/follows/${encodeURIComponent(storySlug)}`, { cache: "no-store" })
       .then(async (response) => {
         if (!active) return;
-        if (response.status === 401) {
-          setState("guest");
-          return;
-        }
         if (!response.ok) throw new Error("Unable to load follow state");
-        const data = await response.json() as { followed: boolean };
-        setState(data.followed ? "following" : "not-following");
+        const data = await response.json() as { followed: boolean; guest?: boolean };
+        setState(data.guest ? "guest" : data.followed ? "following" : "not-following");
       })
       .catch(() => active && setState("error"));
     return () => { active = false; };

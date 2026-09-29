@@ -11,7 +11,7 @@ type HeroSpotlightProps = {
 
 export function HeroSpotlight({ featuredStory, genres }: HeroSpotlightProps) {
   return (
-    <section className="relative overflow-hidden border-b border-slate-200/80 bg-gradient-to-b from-teal-50/40 via-white to-slate-50/50 py-8 sm:py-12">
+    <section className="relative overflow-hidden border-b border-slate-200/80 bg-gradient-to-b from-teal-50/40 via-white to-slate-50/50 py-8 sm:py-8">
       {/* Decorative Glow */}
       <div
         className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-teal-100/50 blur-3xl"

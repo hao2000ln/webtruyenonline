@@ -32,7 +32,7 @@ export default async function ChapterPage({ params }: Props) {
   const data = chapterPathNumber ? await getChapterForReader(slug, chapterPathNumber) : null;
 
   if (!data) notFound();
-  await recordChapterView(data.story.id, data.chapter.id);
+  void recordChapterView(data.story.id, data.chapter.id).catch(() => {});
 
   const paragraphs = sanitizeChapterContent(data.chapter.content)
     .split(/\n\s*\n/u)

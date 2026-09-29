@@ -27,12 +27,25 @@ export async function getAdminChapters({ query, storyId, sort, requestedPage, pa
   const requested = Number.isSafeInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
   const page = Math.min(requested, totalPages);
   const order = sort === "oldest" ? asc(chapters.chapterNumber) : desc(chapters.chapterNumber);
-  const rows = await db.select({
-    id: chapters.id, storyId: chapters.storyId, storyTitle: stories.title,
-    number: chapters.chapterNumber, title: chapters.title, wordCount: chapters.wordCount,
-    isPublished: chapters.isPublished, publishedAt: chapters.publishedAt,
-  }).from(chapters).innerJoin(stories, eq(chapters.storyId, stories.id)).where(where)
-    .orderBy(order, asc(chapters.id)).limit(normalizedPageSize).offset((page - 1) * normalizedPageSize);
+
+  const rows = await db
+    .select({
+      id: chapters.id,
+      storyId: chapters.storyId,
+      storyTitle: stories.title,
+      number: chapters.chapterNumber,
+      title: chapters.title,
+      wordCount: chapters.wordCount,
+      isPublished: chapters.isPublished,
+      publishedAt: chapters.publishedAt,
+    })
+    .from(chapters)
+    .innerJoin(stories, eq(chapters.storyId, stories.id))
+    .where(where)
+    .orderBy(order, asc(chapters.id))
+    .limit(normalizedPageSize)
+    .offset((page - 1) * normalizedPageSize);
+
   return { chapters: rows, query: normalizedQuery, storyId, sort, page, total, totalPages, pageSize: normalizedPageSize };
 }
 
