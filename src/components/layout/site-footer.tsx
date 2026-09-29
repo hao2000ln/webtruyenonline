@@ -18,7 +18,11 @@ const policyLabels = [
 function Brand() {
   return (
     <Link href="/" className="inline-flex items-center gap-3" aria-label="Mộc Thư - Trang chủ">
-      <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-lg font-bold text-white" aria-hidden="true">M</span>
+      <svg className="size-9 shrink-0 rounded-lg shadow-sm" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect width="100" height="100" rx="24" fill="#0f766e"/>
+        <path d="M28 70V30L50 52L72 30V70" stroke="#ffffff" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round"/>
+        <circle cx="50" cy="30" r="6" fill="#ea580c"/>
+      </svg>
       <span className="text-xl font-bold tracking-tight text-white">Mộc Thư</span>
     </Link>
   );

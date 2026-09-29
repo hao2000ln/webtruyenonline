@@ -25,9 +25,11 @@ function Brand() {
       className="group flex shrink-0 items-center gap-2.5 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-700"
       aria-label="Mộc Thư - Trang chủ"
     >
-      <div className="flex size-10 items-center justify-center rounded-xl bg-[#0f766e] text-xl font-black text-white shadow-md shadow-teal-700/20 transition-all duration-300 group-hover:scale-105 group-hover:bg-[#115e59]">
-        M
-      </div>
+      <svg className="size-10 shrink-0 transition-transform duration-300 group-hover:scale-105 shadow-md shadow-teal-700/20 rounded-xl" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect width="100" height="100" rx="24" fill="#0f766e"/>
+        <path d="M28 70V30L50 52L72 30V70" stroke="#ffffff" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round"/>
+        <circle cx="50" cy="30" r="6" fill="#ea580c"/>
+      </svg>
       <span className="text-2xl font-black tracking-tight text-slate-900">Mộc Thư</span>
     </Link>
   );
