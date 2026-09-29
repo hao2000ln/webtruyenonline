@@ -1,23 +1,13 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-const inter = localFont({
-  src: [
-    {
-      path: "../fonts/Inter/Inter-VariableFont_opsz,wght.ttf",
-      style: "normal",
-      weight: "100 900",
-    },
-    {
-      path: "../fonts/Inter/Inter-Italic-VariableFont_opsz,wght.ttf",
-      style: "italic",
-      weight: "100 900",
-    },
-  ],
+const inter = Inter({
+  subsets: ["latin", "vietnamese"],
   variable: "--font-inter",
   display: "swap",
-  fallback: ["Arial", "sans-serif"],
+  // Preload the most common weights only — body (400) and headings (700)
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -35,3 +25,4 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     </html>
   );
 }
+

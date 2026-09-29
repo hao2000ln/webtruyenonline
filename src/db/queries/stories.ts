@@ -113,7 +113,7 @@ export const getStoryDetail = cache(async (slug: string) => {
   };
 });
 
-export async function getStoryChapters(
+export const getStoryChapters = cache(async function getStoryChapters(
   storyId: string,
   query: string,
   sort: ChapterSort,
@@ -140,26 +140,31 @@ export async function getStoryChapters(
     ? asc(chapters.chapterNumber)
     : desc(chapters.chapterNumber);
 
-  const [countRow] = await db.select({ total: count() }).from(chapters).where(where);
-  const total = countRow?.total ?? 0;
+  // Run COUNT and SELECT in parallel — saves one full DB round trip
+  const [countResult, chapterRows] = await Promise.all([
+    db.select({ total: count() }).from(chapters).where(where),
+    db
+      .select({
+        id: chapters.id,
+        number: chapters.chapterNumber,
+        title: chapters.title,
+        publishedAt: chapters.publishedAt,
+        wordCount: chapters.wordCount,
+      })
+      .from(chapters)
+      .where(where)
+      .orderBy(chapterOrder, asc(chapters.id))
+      .limit(CHAPTERS_PER_PAGE)
+      .offset((safePage - 1) * CHAPTERS_PER_PAGE),
+  ]);
+
+  const total = countResult[0]?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / CHAPTERS_PER_PAGE));
   const page = Math.min(safePage, totalPages);
 
-  const chapterRows = await db
-    .select({
-      id: chapters.id,
-      number: chapters.chapterNumber,
-      title: chapters.title,
-      publishedAt: chapters.publishedAt,
-      wordCount: chapters.wordCount,
-    })
-    .from(chapters)
-    .where(where)
-    .orderBy(chapterOrder, asc(chapters.id))
-    .limit(CHAPTERS_PER_PAGE)
-    .offset((page - 1) * CHAPTERS_PER_PAGE);
-
   return {
+    // If safePage was out of bounds, chapterRows will be empty — the page
+    // component compares requestedPage vs page and redirects automatically.
     chapters: chapterRows,
     query: normalizedQuery,
     sort,
@@ -168,7 +173,7 @@ export async function getStoryChapters(
     totalPages,
     pageSize: CHAPTERS_PER_PAGE,
   };
-}
+});
 
 export const getChapterForReader = cache(async (storySlug: string, chapterNumber: string) => {
   if (!/^\d+(?:\.\d{1,3})?$/.test(chapterNumber)) {

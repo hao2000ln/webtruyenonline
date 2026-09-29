@@ -4,6 +4,10 @@ import { getGenresWithStoryCounts } from "@/db/queries/discovery";
 
 export const metadata: Metadata = { title: "Thể loại truyện", description: "Khám phá truyện theo thể loại yêu thích." };
 
+// Danh sách thể loại rất ít thay đổi — cache 10 phút
+export const revalidate = 600;
+
+
 export default async function GenresPage() {
   const genreList = await getGenresWithStoryCounts();
 

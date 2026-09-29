@@ -10,6 +10,10 @@ import { formatChapterNumber, formatCompactNumber, formatDate, formatReadingTime
 import { Pagination } from "@/components/ui/pagination";
 import { BookOpen, Eye, Calendar, Clock, Zap } from "lucide-react";
 
+// Cache rendered HTML for 5 minutes — re-renders only when content changes or cache expires
+export const revalidate = 300;
+
+
 type Props = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{

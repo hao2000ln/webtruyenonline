@@ -36,32 +36,36 @@ export const searchPublishedStories = cache(async (rawQuery: string, requestedPa
     return { query, stories: [], total: 0, page: 1, totalPages: 1 };
   }
 
+  const safePage = normalizePage(requestedPage);
   const pattern = `%${query}%`;
   const filters = and(
     eq(stories.isPublished, true),
     or(ilike(stories.title, pattern), ilike(authors.name, pattern)),
   );
 
-  const [totalRow] = await db
-    .select({ value: count(stories.id) })
-    .from(stories)
-    .leftJoin(authors, eq(stories.authorId, authors.id))
-    .where(filters);
+  // Run COUNT and SELECT in parallel
+  const [totalResult, result] = await Promise.all([
+    db
+      .select({ value: count(stories.id) })
+      .from(stories)
+      .leftJoin(authors, eq(stories.authorId, authors.id))
+      .where(filters),
+    db
+      .select(storyCardSelection)
+      .from(stories)
+      .leftJoin(authors, eq(stories.authorId, authors.id))
+      .where(filters)
+      .orderBy(desc(stories.latestChapterAt), asc(stories.title))
+      .limit(DISCOVERY_PAGE_SIZE)
+      .offset((safePage - 1) * DISCOVERY_PAGE_SIZE),
+  ]);
 
-  const total = totalRow?.value ?? 0;
+  const total = totalResult[0]?.value ?? 0;
   const pageMeta = getPageMeta(total, requestedPage);
-
-  const result = await db
-    .select(storyCardSelection)
-    .from(stories)
-    .leftJoin(authors, eq(stories.authorId, authors.id))
-    .where(filters)
-    .orderBy(desc(stories.latestChapterAt), asc(stories.title))
-    .limit(DISCOVERY_PAGE_SIZE)
-    .offset(pageMeta.offset);
 
   return { query, stories: result, total, ...pageMeta };
 });
+
 
 export const getGenresWithStoryCounts = cache(async () => {
   return db
@@ -100,27 +104,32 @@ export const getStoriesByGenre = cache(
 
     if (!genre) return null;
 
+    const safePage = normalizePage(requestedPage);
     const filters = and(eq(storyGenres.genreId, genre.id), eq(stories.isPublished, true));
-    const [totalRow] = await db
-      .select({ value: count(stories.id) })
-      .from(storyGenres)
-      .innerJoin(stories, eq(storyGenres.storyId, stories.id))
-      .where(filters);
-
-    const total = totalRow?.value ?? 0;
-    const pageMeta = getPageMeta(total, requestedPage);
     const orderBy = sort === "hot" ? desc(stories.viewCount) : desc(stories.latestChapterAt);
 
-    const result = await db
-      .select(storyCardSelection)
-      .from(storyGenres)
-      .innerJoin(stories, eq(storyGenres.storyId, stories.id))
-      .leftJoin(authors, eq(stories.authorId, authors.id))
-      .where(filters)
-      .orderBy(orderBy, asc(stories.title))
-      .limit(DISCOVERY_PAGE_SIZE)
-      .offset(pageMeta.offset);
+    // Run COUNT and SELECT in parallel
+    const [totalResult, result] = await Promise.all([
+      db
+        .select({ value: count(stories.id) })
+        .from(storyGenres)
+        .innerJoin(stories, eq(storyGenres.storyId, stories.id))
+        .where(filters),
+      db
+        .select(storyCardSelection)
+        .from(storyGenres)
+        .innerJoin(stories, eq(storyGenres.storyId, stories.id))
+        .leftJoin(authors, eq(stories.authorId, authors.id))
+        .where(filters)
+        .orderBy(orderBy, asc(stories.title))
+        .limit(DISCOVERY_PAGE_SIZE)
+        .offset((safePage - 1) * DISCOVERY_PAGE_SIZE),
+    ]);
+
+    const total = totalResult[0]?.value ?? 0;
+    const pageMeta = getPageMeta(total, requestedPage);
 
     return { genre, stories: result, total, sort, ...pageMeta };
   },
 );
+

@@ -5,6 +5,10 @@ import { searchPublishedStories } from "@/db/queries/discovery";
 
 type SearchParams = Promise<{ q?: string | string[]; page?: string | string[] }>;
 
+// Cache kết quả tìm kiếm 60 giây — giảm tải DB khi nhiều người tìm cùng từ khóa
+export const revalidate = 60;
+
+
 function readParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] ?? "" : value ?? "";
 }

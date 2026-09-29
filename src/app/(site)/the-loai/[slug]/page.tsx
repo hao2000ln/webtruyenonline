@@ -10,6 +10,10 @@ type Props = {
   searchParams: Promise<{ page?: string | string[]; sort?: string | string[] }>;
 };
 
+// Cache rendered HTML 5 phút — thể loại ít thay đổi
+export const revalidate = 300;
+
+
 function readParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] ?? "" : value ?? "";
 }

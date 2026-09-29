@@ -8,6 +8,10 @@ import { formatChapterNumber, formatDate } from "@/lib/format";
 
 type Props = { params: Promise<{ slug: string; chapter: string }> };
 
+// Chapter content rarely changes after publish — cache for 1 hour
+export const revalidate = 3600;
+
+
 function parseChapterPath(value: string) {
   const match = /^chuong-(\d+(?:\.\d{1,3})?)$/.exec(value);
   return match?.[1] ?? null;
@@ -39,19 +43,27 @@ export default async function ChapterPage({ params }: Props) {
     .map((paragraph) => paragraph.trim())
     .filter(Boolean);
 
+  const nextHref = data.nextChapter
+    ? `/truyen/${data.story.slug}/chuong-${formatChapterNumber(data.nextChapter.number)}`
+    : null;
+
   return (
-    <ReaderExperience
-      story={data.story}
-      chapter={{
-        number: data.chapter.number,
-        title: data.chapter.title,
-        wordCount: data.chapter.wordCount,
-        publishedDate: formatDate(data.chapter.publishedAt),
-      }}
-      paragraphs={paragraphs}
-      previousChapter={data.previousChapter}
-      nextChapter={data.nextChapter}
-      chapterList={data.chapterList}
-    />
+    <>
+      {/* Prefetch next chapter while user reads current one */}
+      {nextHref && <link rel="prefetch" href={nextHref} />}
+      <ReaderExperience
+        story={data.story}
+        chapter={{
+          number: data.chapter.number,
+          title: data.chapter.title,
+          wordCount: data.chapter.wordCount,
+          publishedDate: formatDate(data.chapter.publishedAt),
+        }}
+        paragraphs={paragraphs}
+        previousChapter={data.previousChapter}
+        nextChapter={data.nextChapter}
+        chapterList={data.chapterList}
+      />
+    </>
   );
 }

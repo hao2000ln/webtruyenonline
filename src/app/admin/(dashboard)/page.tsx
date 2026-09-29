@@ -2,8 +2,12 @@ import Link from "next/link";
 import { getAdminDashboard } from "@/db/queries/admin-dashboard";
 import { formatChapterNumber, formatCompactNumber, formatDate } from "@/lib/format";
 
+// Stats đủ chính xác khi refresh mỗi 30 giây
+export const revalidate = 30;
+
 export default async function AdminPage() {
   const { stats, topStories, staleStories, recentStories, recentChapters } = await getAdminDashboard();
+
   const cards = [
     ["Truyện", stats.stories, "/admin/stories"],
     ["Chương", stats.chapters, "/admin/chapters"],
