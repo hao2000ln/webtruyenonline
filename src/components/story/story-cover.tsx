@@ -37,8 +37,10 @@ export function StoryCover({
           className="object-cover"
         />
       ) : (
-        <div className="absolute inset-x-2 bottom-2 border-t border-white/30 pt-2 text-center text-xs font-semibold leading-tight text-white line-clamp-2">
-          {title}
+        <div className="absolute inset-0 flex items-center justify-center p-3 text-center">
+          <span className="line-clamp-4 text-xs font-bold leading-snug text-white/95 drop-shadow-sm">
+            {title}
+          </span>
         </div>
       )}
     </div>

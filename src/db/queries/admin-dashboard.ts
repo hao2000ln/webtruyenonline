@@ -10,29 +10,37 @@ export async function getAdminDashboard() {
     or(isNull(stories.latestChapterAt), lt(stories.latestChapterAt, staleBefore)),
   );
 
-  // Parallelize all 12 statistics and list queries simultaneously
+  // Chunk queries to avoid exhausting DB connection pool (max 10) and Supabase limits (15)
   const [
     [storyCount],
     [chapterCount],
     [authorCount],
     [genreCount],
-    [publishedStories],
-    [publishedChapters],
-    [totalViews],
-    [staleStoryCount],
-    topStories,
-    staleStories,
-    recentStories,
-    recentChapters,
   ] = await Promise.all([
     db.select({ value: count() }).from(stories),
     db.select({ value: count() }).from(chapters),
     db.select({ value: count() }).from(authors),
     db.select({ value: count() }).from(genres),
+  ]);
+
+  const [
+    [publishedStories],
+    [publishedChapters],
+    [totalViews],
+    [staleStoryCount],
+  ] = await Promise.all([
     db.select({ value: count() }).from(stories).where(eq(stories.isPublished, true)),
     db.select({ value: count() }).from(chapters).where(eq(chapters.isPublished, true)),
     db.select({ value: sql<string>`coalesce(sum(${stories.viewCount}), 0)` }).from(stories),
     db.select({ value: count() }).from(stories).where(staleCondition),
+  ]);
+
+  const [
+    topStories,
+    staleStories,
+    recentStories,
+    recentChapters,
+  ] = await Promise.all([
     db
       .select({ id: stories.id, title: stories.title, viewCount: stories.viewCount, totalChapters: stories.totalChapters })
       .from(stories)

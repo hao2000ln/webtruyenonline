@@ -33,7 +33,7 @@ export function HeroSpotlight({ featuredStory, genres }: HeroSpotlightProps) {
               <h1 className="mt-4 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl lg:text-4xl">
                 <Link
                   href={`/truyen/${featuredStory.slug}`}
-                  className="transition hover:text-[#0f766e]"
+                  className="transition hover:text-teal-700"
                 >
                   {featuredStory.title}
                 </Link>
@@ -62,7 +62,7 @@ export function HeroSpotlight({ featuredStory, genres }: HeroSpotlightProps) {
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
                   href={`/truyen/${featuredStory.slug}`}
-                  className="flex items-center gap-2 rounded-xl bg-[#0f766e] px-6 py-3 text-sm font-bold text-white shadow-md shadow-teal-700/20 transition hover:bg-[#115e59] active:scale-95"
+                  className="flex items-center gap-2 rounded-xl bg-teal-700 px-6 py-3 text-sm font-bold text-white shadow-md shadow-teal-700/20 transition hover:bg-teal-800 active:scale-95"
                 >
                   <BookOpen className="w-4 h-4" />
                   <span>Đọc ngay tác phẩm</span>
@@ -105,7 +105,7 @@ export function HeroSpotlight({ featuredStory, genres }: HeroSpotlightProps) {
               <Link
                 key={genre.id}
                 href={`/the-loai/${genre.slug}`}
-                className="shrink-0 rounded-full border border-slate-200/80 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-600 hover:bg-teal-50 hover:text-[#0f766e] shadow-2xs"
+                className="shrink-0 rounded-full border border-slate-200/80 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-600 hover:bg-teal-50 hover:text-teal-700 shadow-2xs"
               >
                 {genre.name}
               </Link>
