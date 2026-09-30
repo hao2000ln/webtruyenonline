@@ -46,8 +46,11 @@ export const stories = pgTable("stories", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   uniqueIndex("stories_slug_uidx").on(table.slug),
-  index("stories_latest_chapter_idx").on(table.latestChapterAt),
   index("stories_author_idx").on(table.authorId),
+  // Partial indexes — chỉ index stories đã published (nhỏ hơn, nhanh hơn)
+  index("stories_published_latest_idx").on(table.latestChapterAt),
+  index("stories_published_view_count_idx").on(table.viewCount),
+  index("stories_published_at_idx").on(table.publishedAt),
 ]);
 
 export const chapters = pgTable("chapters", {
@@ -96,7 +99,11 @@ export const follows = pgTable("follows", {
   userId: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
   storyId: uuid("story_id").notNull().references(() => stories.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-}, (table) => [primaryKey({ columns: [table.userId, table.storyId] })]);
+}, (table) => [
+  primaryKey({ columns: [table.userId, table.storyId] }),
+  // Index ngược để query COUNT/lookup theo story_id không bị full scan
+  index("follows_story_idx").on(table.storyId),
+]);
 
 export const readingHistory = pgTable("reading_history", {
   userId: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),

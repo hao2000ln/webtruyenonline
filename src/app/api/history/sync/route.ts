@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db";
@@ -28,51 +28,90 @@ export async function POST(request: Request) {
   if (!payload.success) return NextResponse.json({ error: "invalid-payload" }, { status: 400 });
 
   await ensureProfile(user);
-  let synced = 0;
 
-  for (const record of payload.data.records) {
-    const [chapter] = await db
-      .select({ storyId: stories.id, chapterId: chapters.id })
-      .from(stories)
-      .innerJoin(
-        chapters,
-        and(
-          eq(chapters.storyId, stories.id),
-          eq(chapters.chapterNumber, record.chapterNumber),
-          eq(chapters.isPublished, true),
-        ),
-      )
-      .where(and(eq(stories.slug, record.storySlug), eq(stories.isPublished, true)))
-      .limit(1);
+  const records = payload.data.records;
+  if (records.length === 0) return NextResponse.json({ synced: 0 });
 
-    if (!chapter) continue;
+  // Bước 1: Lấy tất cả storyId + chapterId trong 1 query thay vì N queries
+  const slugs = [...new Set(records.map((r) => r.storySlug))];
+  const chapterRows = await db
+    .select({
+      storyId: stories.id,
+      storySlug: stories.slug,
+      chapterId: chapters.id,
+      chapterNumber: chapters.chapterNumber,
+    })
+    .from(stories)
+    .innerJoin(
+      chapters,
+      and(eq(chapters.storyId, stories.id), eq(chapters.isPublished, true)),
+    )
+    .where(and(eq(stories.isPublished, true), inArray(stories.slug, slugs)));
 
-    const incomingReadAt = new Date(record.readAt);
-    const [existing] = await db
-      .select({ lastReadAt: readingHistory.lastReadAt })
-      .from(readingHistory)
-      .where(and(eq(readingHistory.userId, user.id), eq(readingHistory.storyId, chapter.storyId)))
-      .limit(1);
+  // Tạo lookup map: "slug:chapterNumber" → { storyId, chapterId }
+  const chapterLookup = new Map<string, { storyId: string; chapterId: string }>();
+  for (const row of chapterRows) {
+    chapterLookup.set(`${row.storySlug}:${row.chapterNumber}`, {
+      storyId: row.storyId,
+      chapterId: row.chapterId,
+    });
+  }
 
-    if (!existing) {
-      await db.insert(readingHistory).values({
-        userId: user.id,
-        storyId: chapter.storyId,
-        chapterId: chapter.chapterId,
-        lastReadAt: incomingReadAt,
-      });
-      synced += 1;
-      continue;
-    }
-
-    if (incomingReadAt > existing.lastReadAt) {
-      await db
-        .update(readingHistory)
-        .set({ chapterId: chapter.chapterId, lastReadAt: incomingReadAt })
-        .where(and(eq(readingHistory.userId, user.id), eq(readingHistory.storyId, chapter.storyId)));
-      synced += 1;
+  // Lọc records có chapter hợp lệ
+  type ValidRecord = { storyId: string; chapterId: string; readAt: Date };
+  const validRecords: ValidRecord[] = [];
+  for (const record of records) {
+    const found = chapterLookup.get(`${record.storySlug}:${record.chapterNumber}`);
+    if (found) {
+      validRecords.push({ ...found, readAt: new Date(record.readAt) });
     }
   }
 
-  return NextResponse.json({ synced });
+  if (validRecords.length === 0) return NextResponse.json({ synced: 0 });
+
+  // Bước 2: Lấy lịch sử hiện có trong 1 query
+  const storyIds = [...new Set(validRecords.map((r) => r.storyId))];
+  const existingRows = await db
+    .select({
+      storyId: readingHistory.storyId,
+      lastReadAt: readingHistory.lastReadAt,
+    })
+    .from(readingHistory)
+    .where(and(eq(readingHistory.userId, user.id), inArray(readingHistory.storyId, storyIds)));
+
+  const existingMap = new Map<string, Date>();
+  for (const row of existingRows) {
+    existingMap.set(row.storyId, row.lastReadAt);
+  }
+
+  // Bước 3: Chỉ upsert những record thực sự mới hơn
+  const toUpsert = validRecords.filter((r) => {
+    const existing = existingMap.get(r.storyId);
+    return !existing || r.readAt > existing;
+  });
+
+  if (toUpsert.length === 0) return NextResponse.json({ synced: 0 });
+
+  // Bulk upsert trong 1 query thay vì N queries
+  await db
+    .insert(readingHistory)
+    .values(
+      toUpsert.map((r) => ({
+        userId: user.id,
+        storyId: r.storyId,
+        chapterId: r.chapterId,
+        lastReadAt: r.readAt,
+      })),
+    )
+    .onConflictDoUpdate({
+      target: [readingHistory.userId, readingHistory.storyId],
+      // Chỉ ghi đè nếu incoming mới hơn (tránh ghi đè tiến độ mới bằng dữ liệu cũ)
+      set: {
+        chapterId: sql`excluded.chapter_id`,
+        lastReadAt: sql`excluded.last_read_at`,
+      },
+      where: sql`reading_history.last_read_at < excluded.last_read_at`,
+    });
+
+  return NextResponse.json({ synced: toUpsert.length });
 }

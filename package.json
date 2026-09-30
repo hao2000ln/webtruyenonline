@@ -21,7 +21,9 @@
     "db:seed": "node --env-file=.env.local --import tsx scripts/seed-db.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "db:check-indexes": "node --env-file=.env.local --import tsx scripts/check-perf-indexes.ts",
+    "db:apply-indexes": "node --env-file=.env.local --import tsx scripts/apply-perf-indexes.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",
