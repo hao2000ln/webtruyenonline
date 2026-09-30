@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { HeroSpotlight } from "@/components/home/hero-spotlight";
 import { FeaturedBookGrid } from "@/components/home/featured-book-grid";
 import { LatestUpdatesFeed } from "@/components/home/latest-updates-feed";
@@ -7,7 +8,18 @@ import { CompletedShowcase } from "@/components/home/completed-showcase";
 import { getHomepageStories } from "@/db/queries/stories";
 import { LayoutGrid, Lightbulb } from "lucide-react";
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://mocthu.vn";
+
 export const revalidate = 60;
+
+export const metadata: Metadata = {
+  alternates: { canonical: APP_URL },
+  openGraph: {
+    url: APP_URL,
+    type: "website",
+  },
+};
+
 
 export default async function HomePage() {
   const { latestUpdated, newest, hot, completed, allGenres } =

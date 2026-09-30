@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+
+# Không index trang admin và auth
+Disallow: /admin/
+Disallow: /dang-nhap
+Disallow: /dang-ky
+Disallow: /tai-khoan
+Disallow: /theo-doi
+Disallow: /lich-su
+Disallow: /auth/
+
+# Không index các URL có query string tìm kiếm và sort (tránh duplicate)
+Disallow: /tim-kiem?*
+Disallow: /the-loai/*/? 
+Disallow: /truyen/*?*
+
+Sitemap: https://mocthu.vn/sitemap.xml

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Script from "next/script";
 import { notFound, redirect } from "next/navigation";
 import { ContinueReadingButton } from "@/components/reader/continue-reading-button";
 import { ChapterFilters } from "@/components/story/chapter-filters";
@@ -9,6 +10,8 @@ import { getStoryChapters, getStoryDetail, type ChapterSort } from "@/db/queries
 import { formatChapterNumber, formatCompactNumber, formatDate, formatReadingTime, getStoryStatusLabel, getStoryStatusColor } from "@/lib/format";
 import { Pagination } from "@/components/ui/pagination";
 import { BookOpen, Eye, Calendar, Clock, Zap } from "lucide-react";
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://mocthu.vn";
 
 // Cache rendered HTML for 5 minutes — re-renders only when content changes or cache expires
 export const revalidate = 300;
@@ -45,9 +48,41 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!story) return { title: "Không tìm thấy truyện" };
 
+  const canonicalUrl = `${APP_URL}/truyen/${story.slug}`;
+  const description =
+    story.description ??
+    `Đọc ${story.title} online tại Mộc Thư. ${story.totalChapters} chương, cập nhật liên tục.`;
+  const keywords = [
+    story.title,
+    story.originalTitle,
+    story.authorName ?? "",
+    ...story.genres.map((g) => g.name),
+    "đọc truyện online",
+    "truyện chữ",
+  ].filter(Boolean) as string[];
+
   return {
     title: story.title,
-    description: story.description ?? `Mộc Thư ${story.title} online.`,
+    description,
+    keywords,
+    alternates: { canonical: canonicalUrl },
+    openGraph: {
+      type: "book",
+      url: canonicalUrl,
+      title: story.title,
+      description,
+      ...(story.coverUrl
+        ? { images: [{ url: story.coverUrl, width: 600, height: 900, alt: story.title }] }
+        : {}),
+      authors: story.authorName ? [story.authorName] : undefined,
+      tags: story.genres.map((g) => g.name),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: story.title,
+      description,
+      ...(story.coverUrl ? { images: [story.coverUrl] } : {}),
+    },
   };
 }
 
@@ -71,9 +106,57 @@ export default async function StoryDetailPage({ params, searchParams }: Props) {
 
   const primaryGenre = story.genres[0];
 
+  // JSON-LD: Book structured data
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Book",
+    name: story.title,
+    ...(story.originalTitle ? { alternateName: story.originalTitle } : {}),
+    description: story.description ?? undefined,
+    url: `${APP_URL}/truyen/${story.slug}`,
+    ...(story.coverUrl ? { image: story.coverUrl } : {}),
+    ...(story.authorName ? { author: { "@type": "Person", name: story.authorName } } : {}),
+    genre: story.genres.map((g) => g.name),
+    numberOfPages: story.totalChapters,
+    ...(story.publishedAt ? { datePublished: story.publishedAt.toISOString().split("T")[0] } : {}),
+    ...(story.latestChapterAt ? { dateModified: story.latestChapterAt.toISOString().split("T")[0] } : {}),
+    inLanguage: "vi",
+    publisher: {
+      "@type": "Organization",
+      name: "Mộc Thư",
+      url: APP_URL,
+    },
+  };
+
+  // JSON-LD: BreadcrumbList
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Trang chủ", item: APP_URL },
+      ...(primaryGenre
+        ? [{ "@type": "ListItem", position: 2, name: primaryGenre.name, item: `${APP_URL}/the-loai/${primaryGenre.slug}` }]
+        : []),
+      { "@type": "ListItem", position: primaryGenre ? 3 : 2, name: story.title, item: `${APP_URL}/truyen/${story.slug}` },
+    ],
+  };
+
   return (
-    <main className="site-container py-6 sm:py-10">
+    <>
+      {/* JSON-LD Structured Data */}
+      <Script
+        id="jsonld-book"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <Script
+        id="jsonld-breadcrumb"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
+      <main className="site-container py-6 sm:py-10">
       {/* 1. Breadcrumbs */}
+
       <nav
         className="mb-6 flex flex-wrap items-center gap-2 text-xs text-slate-500 sm:text-sm"
         aria-label="Điều hướng"
@@ -293,6 +376,8 @@ export default async function StoryDetailPage({ params, searchParams }: Props) {
         )}
       </section>
     </main>
+    </>
   );
 }
+
 

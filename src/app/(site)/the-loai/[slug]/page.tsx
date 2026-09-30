@@ -23,11 +23,26 @@ function readPage(value: string | string[] | undefined) {
   return Number.isSafeInteger(page) && page > 0 ? page : 1;
 }
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://mocthu.vn";
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const genre = await getGenreBySlug((await params).slug);
   if (!genre) return { title: "Không tìm thấy thể loại" };
-  return { title: `Truyện ${genre.name}`, description: genre.description ?? `Danh sách truyện thể loại ${genre.name}.` };
+  const description = genre.description ?? `Danh sách truyện thể loại ${genre.name} hay nhất tại Mộc Thư.`;
+  const canonicalUrl = `${APP_URL}/the-loai/${genre.slug}`;
+  return {
+    title: `Truyện ${genre.name}`,
+    description,
+    alternates: { canonical: canonicalUrl },
+    openGraph: {
+      type: "website",
+      url: canonicalUrl,
+      title: `Truyện ${genre.name} | Mộc Thư`,
+      description,
+    },
+  };
 }
+
 
 export default async function GenreDetailPage({ params, searchParams }: Props) {
   const { slug } = await params;
