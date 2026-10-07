@@ -13,8 +13,11 @@ export function formatCompactNumber(value: number) {
   return compactNumberFormatter.format(value);
 }
 
-export function formatDate(value: Date | null) {
-  return value ? dateFormatter.format(value) : "Chưa cập nhật";
+export function formatDate(value: Date | string | number | null | undefined) {
+  if (!value) return "Chưa cập nhật";
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "Chưa cập nhật";
+  return dateFormatter.format(date);
 }
 
 export function getStoryStatusLabel(status: "ONGOING" | "COMPLETED" | "HIATUS") {

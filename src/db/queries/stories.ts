@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { and, asc, count, desc, eq, gt, ilike, lt, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import { authors, chapters, genres, stories, storyGenres } from "@/db/schema";
@@ -32,87 +33,97 @@ export type StoryCardData = Awaited<ReturnType<typeof selectStoryCards>>[number]
 export const CHAPTERS_PER_PAGE = 50;
 export type ChapterSort = "newest" | "oldest";
 
-export const getHomepageStories = cache(async () => {
-  const published = eq(stories.isPublished, true);
+export const getHomepageStories = cache(
+  unstable_cache(
+    async () => {
+      const published = eq(stories.isPublished, true);
 
-  // Run homepage queries in parallel for high throughput and minimum latency
-  const [latestUpdated, newest, hot, completed, allGenres] = await Promise.all([
-    selectStoryCards(published, desc(stories.latestChapterAt), 6),
-    selectStoryCards(published, desc(stories.publishedAt), 8),
-    selectStoryCards(published, desc(stories.viewCount), 6),
-    selectStoryCards(
-      and(published, eq(stories.status, "COMPLETED"))!,
-      desc(stories.latestChapterAt),
-      4,
-    ),
-    db
-      .select({ id: genres.id, name: genres.name, slug: genres.slug })
-      .from(genres)
-      .orderBy(asc(genres.name))
-      .limit(15),
-  ]);
+      const [latestUpdated, newest, hot, completed, allGenres] = await Promise.all([
+        selectStoryCards(published, desc(stories.latestChapterAt), 6),
+        selectStoryCards(published, desc(stories.publishedAt), 8),
+        selectStoryCards(published, desc(stories.viewCount), 6),
+        selectStoryCards(
+          and(published, eq(stories.status, "COMPLETED"))!,
+          desc(stories.latestChapterAt),
+          4,
+        ),
+        db
+          .select({ id: genres.id, name: genres.name, slug: genres.slug })
+          .from(genres)
+          .orderBy(asc(genres.name))
+          .limit(15),
+      ]);
 
-  return { latestUpdated, newest, hot, completed, allGenres };
-});
+      return { latestUpdated, newest, hot, completed, allGenres };
+    },
+    ["homepage-stories-cache"],
+    { revalidate: 60, tags: ["stories", "homepage"] },
+  ),
+);
 
-export const getStoryDetail = cache(async (slug: string) => {
-  const [story] = await db
-    .select({
-      id: stories.id,
-      title: stories.title,
-      slug: stories.slug,
-      originalTitle: stories.originalTitle,
-      description: stories.description,
-      coverUrl: stories.coverUrl,
-      status: stories.status,
-      totalChapters: stories.totalChapters,
-      viewCount: stories.viewCount,
-      followCount: stories.followCount,
-      ratingAvg: stories.ratingAvg,
-      ratingCount: stories.ratingCount,
-      latestChapterAt: stories.latestChapterAt,
-      publishedAt: stories.publishedAt,
-      authorName: authors.name,
-      authorSlug: authors.slug,
-    })
-    .from(stories)
-    .leftJoin(authors, eq(stories.authorId, authors.id))
-    .where(and(eq(stories.slug, slug), eq(stories.isPublished, true)))
-    .limit(1);
+export const getStoryDetail = cache((slug: string) =>
+  unstable_cache(
+    async () => {
+      const [story] = await db
+        .select({
+          id: stories.id,
+          title: stories.title,
+          slug: stories.slug,
+          originalTitle: stories.originalTitle,
+          description: stories.description,
+          coverUrl: stories.coverUrl,
+          status: stories.status,
+          totalChapters: stories.totalChapters,
+          viewCount: stories.viewCount,
+          followCount: stories.followCount,
+          ratingAvg: stories.ratingAvg,
+          ratingCount: stories.ratingCount,
+          latestChapterAt: stories.latestChapterAt,
+          publishedAt: stories.publishedAt,
+          authorName: authors.name,
+          authorSlug: authors.slug,
+        })
+        .from(stories)
+        .leftJoin(authors, eq(stories.authorId, authors.id))
+        .where(and(eq(stories.slug, slug), eq(stories.isPublished, true)))
+        .limit(1);
 
-  if (!story) {
-    return null;
-  }
+      if (!story) {
+        return null;
+      }
 
-  // Parallelize genres, first chapter, and latest chapter queries
-  const [storyGenreRows, [firstChapter], [latestChapter]] = await Promise.all([
-    db
-      .select({ id: genres.id, name: genres.name, slug: genres.slug })
-      .from(storyGenres)
-      .innerJoin(genres, eq(storyGenres.genreId, genres.id))
-      .where(eq(storyGenres.storyId, story.id))
-      .orderBy(asc(genres.name)),
-    db
-      .select({ number: chapters.chapterNumber, title: chapters.title })
-      .from(chapters)
-      .where(and(eq(chapters.storyId, story.id), eq(chapters.isPublished, true)))
-      .orderBy(asc(chapters.chapterNumber))
-      .limit(1),
-    db
-      .select({ number: chapters.chapterNumber, title: chapters.title })
-      .from(chapters)
-      .where(and(eq(chapters.storyId, story.id), eq(chapters.isPublished, true)))
-      .orderBy(desc(chapters.chapterNumber))
-      .limit(1),
-  ]);
+      const [storyGenreRows, [firstChapter], [latestChapter]] = await Promise.all([
+        db
+          .select({ id: genres.id, name: genres.name, slug: genres.slug })
+          .from(storyGenres)
+          .innerJoin(genres, eq(storyGenres.genreId, genres.id))
+          .where(eq(storyGenres.storyId, story.id))
+          .orderBy(asc(genres.name)),
+        db
+          .select({ number: chapters.chapterNumber, title: chapters.title })
+          .from(chapters)
+          .where(and(eq(chapters.storyId, story.id), eq(chapters.isPublished, true)))
+          .orderBy(asc(chapters.chapterNumber))
+          .limit(1),
+        db
+          .select({ number: chapters.chapterNumber, title: chapters.title })
+          .from(chapters)
+          .where(and(eq(chapters.storyId, story.id), eq(chapters.isPublished, true)))
+          .orderBy(desc(chapters.chapterNumber))
+          .limit(1),
+      ]);
 
-  return {
-    ...story,
-    genres: storyGenreRows,
-    firstChapter: firstChapter ?? null,
-    latestChapter: latestChapter ?? null,
-  };
-});
+      return {
+        ...story,
+        genres: storyGenreRows,
+        firstChapter: firstChapter ?? null,
+        latestChapter: latestChapter ?? null,
+      };
+    },
+    [`story-detail-${slug}`],
+    { revalidate: 300, tags: ["stories", `story-${slug}`] },
+  )(),
+);
 
 export const getStoryChapters = cache(async function getStoryChapters(
   storyId: string,
