@@ -164,8 +164,72 @@ export const getStoryChapters = cache(async function getStoryChapters(
   const page = Math.min(safePage, totalPages);
 
   return {
-    // If safePage was out of bounds, chapterRows will be empty — the page
-    // component compares requestedPage vs page and redirects automatically.
+    chapters: chapterRows,
+    query: normalizedQuery,
+    sort,
+    page,
+    total,
+    totalPages,
+    pageSize: CHAPTERS_PER_PAGE,
+  };
+});
+
+export const getStoryChaptersBySlug = cache(async function getStoryChaptersBySlug(
+  storySlug: string,
+  query: string,
+  sort: ChapterSort,
+  requestedPage: number,
+) {
+  const normalizedQuery = query.trim().slice(0, 100);
+  const safePage = Number.isSafeInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+
+  const conditions: SQL[] = [
+    eq(stories.slug, storySlug),
+    eq(stories.isPublished, true),
+    eq(chapters.isPublished, true),
+  ];
+
+  if (normalizedQuery) {
+    const pattern = `%${normalizedQuery}%`;
+    const searchCondition = or(
+      ilike(chapters.title, pattern),
+      sql`${chapters.chapterNumber}::text ilike ${pattern}`,
+    );
+    if (searchCondition) conditions.push(searchCondition);
+  }
+
+  const where = and(...conditions)!;
+  const chapterOrder = sort === "oldest"
+    ? asc(chapters.chapterNumber)
+    : desc(chapters.chapterNumber);
+
+  const [countResult, chapterRows] = await Promise.all([
+    db
+      .select({ total: count() })
+      .from(chapters)
+      .innerJoin(stories, eq(chapters.storyId, stories.id))
+      .where(where),
+    db
+      .select({
+        id: chapters.id,
+        number: chapters.chapterNumber,
+        title: chapters.title,
+        publishedAt: chapters.publishedAt,
+        wordCount: chapters.wordCount,
+      })
+      .from(chapters)
+      .innerJoin(stories, eq(chapters.storyId, stories.id))
+      .where(where)
+      .orderBy(chapterOrder, asc(chapters.id))
+      .limit(CHAPTERS_PER_PAGE)
+      .offset((safePage - 1) * CHAPTERS_PER_PAGE),
+  ]);
+
+  const total = countResult[0]?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / CHAPTERS_PER_PAGE));
+  const page = Math.min(safePage, totalPages);
+
+  return {
     chapters: chapterRows,
     query: normalizedQuery,
     sort,

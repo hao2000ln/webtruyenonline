@@ -47,10 +47,10 @@ export const stories = pgTable("stories", {
 }, (table) => [
   uniqueIndex("stories_slug_uidx").on(table.slug),
   index("stories_author_idx").on(table.authorId),
-  // Partial indexes — chỉ index stories đã published (nhỏ hơn, nhanh hơn)
-  index("stories_published_latest_idx").on(table.latestChapterAt),
-  index("stories_published_view_count_idx").on(table.viewCount),
-  index("stories_published_at_idx").on(table.publishedAt),
+  // Composite indexes — tối ưu hóa tốc độ lọc và sắp xếp truyện đã xuất bản
+  index("stories_is_published_latest_idx").on(table.isPublished, table.latestChapterAt),
+  index("stories_is_published_view_count_idx").on(table.isPublished, table.viewCount),
+  index("stories_is_published_at_idx").on(table.isPublished, table.publishedAt),
 ]);
 
 export const chapters = pgTable("chapters", {

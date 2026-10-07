@@ -6,7 +6,7 @@ import { ContinueReadingButton } from "@/components/reader/continue-reading-butt
 import { ChapterFilters } from "@/components/story/chapter-filters";
 import { FollowButton } from "@/components/story/follow-button";
 import { HeroStoryCover } from "@/components/story/story-cover";
-import { getStoryChapters, getStoryDetail, type ChapterSort } from "@/db/queries/stories";
+import { getStoryChaptersBySlug, getStoryDetail, type ChapterSort } from "@/db/queries/stories";
 import { formatChapterNumber, formatCompactNumber, formatDate, formatReadingTime, getStoryStatusLabel, getStoryStatusColor } from "@/lib/format";
 import { Pagination } from "@/components/ui/pagination";
 import { BookOpen, Eye, Calendar, Clock, Zap } from "lucide-react";
@@ -92,11 +92,15 @@ export default async function StoryDetailPage({ params, searchParams }: Props) {
   const query = readParam(queryParams.q).trim().slice(0, 100);
   const sort: ChapterSort = readParam(queryParams.sort) === "oldest" ? "oldest" : "newest";
   const requestedPage = readPage(queryParams.page);
-  const story = await getStoryDetail(slug);
+
+  // Chạy song song cả 2 query bằng Promise.all thay vì chờ tuần tự (xóa bỏ Waterfall)
+  const [story, chapterResult] = await Promise.all([
+    getStoryDetail(slug),
+    getStoryChaptersBySlug(slug, query, sort, requestedPage),
+  ]);
 
   if (!story) notFound();
 
-  const chapterResult = await getStoryChapters(story.id, query, sort, requestedPage);
   if (requestedPage !== chapterResult.page) {
     redirect(chapterListUrl(story.slug, chapterResult.query, sort, chapterResult.page));
   }

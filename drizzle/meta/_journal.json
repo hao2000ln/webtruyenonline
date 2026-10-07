@@ -43,6 +43,13 @@
       "when": 1790649370129,
       "tag": "0005_eminent_prism",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791348912108,
+      "tag": "0006_fixed_sleeper",
+      "breakpoints": true
     }
   ]
 }
