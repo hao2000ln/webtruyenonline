@@ -7,7 +7,12 @@ import { createClient } from "@/lib/supabase/server";
 
 type Context = { params: Promise<{ slug: string }> };
 
-async function getRequestUser() {
+async function getRequestUser(request: NextRequest) {
+  const hasAuthCookie = request.cookies
+    .getAll()
+    .some((c) => c.name.includes("-auth-token"));
+  if (!hasAuthCookie) return null;
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -24,8 +29,8 @@ async function getPublishedStory(slug: string) {
   return story ?? null;
 }
 
-export async function GET(_request: NextRequest, { params }: Context) {
-  const user = await getRequestUser();
+export async function GET(request: NextRequest, { params }: Context) {
+  const user = await getRequestUser(request);
   if (!user) return NextResponse.json({ followed: false, guest: true });
 
   const { slug } = await params;
@@ -41,8 +46,8 @@ export async function GET(_request: NextRequest, { params }: Context) {
   return NextResponse.json({ followed: Boolean(follow) });
 }
 
-export async function POST(_request: NextRequest, { params }: Context) {
-  const user = await getRequestUser();
+export async function POST(request: NextRequest, { params }: Context) {
+  const user = await getRequestUser(request);
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const { slug } = await params;
@@ -58,8 +63,8 @@ export async function POST(_request: NextRequest, { params }: Context) {
   return NextResponse.json({ followed: true });
 }
 
-export async function DELETE(_request: NextRequest, { params }: Context) {
-  const user = await getRequestUser();
+export async function DELETE(request: NextRequest, { params }: Context) {
+  const user = await getRequestUser(request);
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const { slug } = await params;

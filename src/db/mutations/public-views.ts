@@ -3,9 +3,15 @@ import { db } from "@/db";
 import { chapters, stories } from "@/db/schema";
 
 export async function recordChapterView(storyId: string, chapterId: string) {
-  // Ghi nhận view song song không cần transaction wrapper để tránh giữ connection pooler
-  await Promise.all([
-    db.update(stories).set({ viewCount: sql`${stories.viewCount} + 1` }).where(eq(stories.id, storyId)),
-    db.update(chapters).set({ viewCount: sql`${chapters.viewCount} + 1` }).where(eq(chapters.id, chapterId)),
-  ]);
+  // Gom cả update story view và chapter view vào 1 câu lệnh SQL duy nhất (tiết kiệm 50% round-trips và connections)
+  await db.execute(sql`
+    with updated_story as (
+      update ${stories}
+      set view_count = ${stories.viewCount} + 1
+      where ${stories.id} = ${storyId}
+    )
+    update ${chapters}
+    set view_count = ${chapters.viewCount} + 1
+    where ${chapters.id} = ${chapterId}
+  `);
 }

@@ -16,10 +16,10 @@ const globalForDb = globalThis as unknown as {
 export const dbClient =
   globalForDb.dbClient ??
   postgres(connectionString, {
-    max: process.env.NODE_ENV === "production" ? 1 : 3,
+    max: process.env.NODE_ENV === "production" ? 2 : 5,
     prepare: false,
     ssl: "require",
-    idle_timeout: 5,
+    idle_timeout: 20,
     connect_timeout: 10,
   });
 

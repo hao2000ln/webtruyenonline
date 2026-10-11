@@ -121,6 +121,13 @@ export function ReaderExperience({
     });
   }, [chapter.number, chapter.title, story.slug, story.title]);
 
+  // Prefetch next chapter silently in background for instant transition
+  useEffect(() => {
+    if (nextChapter) {
+      router.prefetch(`/truyen/${story.slug}/chuong-${formatChapterNumber(nextChapter.number)}`);
+    }
+  }, [nextChapter, story.slug, router]);
+
   // Scroll Progress and Bottom Bar visibility handler
   useEffect(() => {
     let ticking = false;

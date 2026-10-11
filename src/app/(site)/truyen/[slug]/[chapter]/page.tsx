@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: "Mộc Thư",
       locale: "vi_VN",
       ...(data.chapter.publishedAt
-        ? { publishedTime: data.chapter.publishedAt.toISOString() }
+        ? { publishedTime: new Date(data.chapter.publishedAt).toISOString() }
         : {}),
     },
     twitter: {
@@ -99,8 +99,8 @@ export default async function ChapterPage({ params }: Props) {
     },
     ...(data.chapter.publishedAt
       ? {
-          datePublished: data.chapter.publishedAt.toISOString().split("T")[0],
-          dateModified: data.chapter.publishedAt.toISOString().split("T")[0],
+          datePublished: new Date(data.chapter.publishedAt).toISOString().split("T")[0],
+          dateModified: new Date(data.chapter.publishedAt).toISOString().split("T")[0],
         }
       : {}),
   };

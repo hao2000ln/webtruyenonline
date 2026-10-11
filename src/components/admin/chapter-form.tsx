@@ -15,10 +15,12 @@ const inputClass = "mt-2 h-11 w-full rounded-lg border border-slate-300 bg-white
 function slugify(value: string) {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/đ/g, "d").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
-function localDate(value: Date | null | undefined) {
+function localDate(value: Date | string | null | undefined) {
   if (!value) return "";
-  const offset = value.getTimezoneOffset() * 60_000;
-  return new Date(value.getTime() - offset).toISOString().slice(0, 16);
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  const offset = d.getTimezoneOffset() * 60_000;
+  return new Date(d.getTime() - offset).toISOString().slice(0, 16);
 }
 function ErrorText({ value }: { value?: string[] }) { return value?.[0] ? <p className="mt-1 text-sm text-red-600">{value[0]}</p> : null; }
 

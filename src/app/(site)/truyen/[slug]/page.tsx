@@ -122,8 +122,8 @@ export default async function StoryDetailPage({ params, searchParams }: Props) {
     ...(story.authorName ? { author: { "@type": "Person", name: story.authorName } } : {}),
     genre: story.genres.map((g) => g.name),
     numberOfPages: story.totalChapters,
-    ...(story.publishedAt ? { datePublished: story.publishedAt.toISOString().split("T")[0] } : {}),
-    ...(story.latestChapterAt ? { dateModified: story.latestChapterAt.toISOString().split("T")[0] } : {}),
+    ...(story.publishedAt ? { datePublished: new Date(story.publishedAt).toISOString().split("T")[0] } : {}),
+    ...(story.latestChapterAt ? { dateModified: new Date(story.latestChapterAt).toISOString().split("T")[0] } : {}),
     inLanguage: "vi",
     publisher: {
       "@type": "Organization",

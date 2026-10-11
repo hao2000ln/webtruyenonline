@@ -2,6 +2,7 @@ import { cache } from "react";
 import { and, asc, count, desc, eq, ilike, or } from "drizzle-orm";
 import { db } from "@/db";
 import { authors, genres, stories, storyGenres } from "@/db/schema";
+import { withCache } from "@/db/queries/stories";
 
 export const DISCOVERY_PAGE_SIZE = 12;
 
@@ -67,24 +68,30 @@ export const searchPublishedStories = cache(async (rawQuery: string, requestedPa
 });
 
 
-export const getGenresWithStoryCounts = cache(async () => {
-  return db
-    .select({
-      id: genres.id,
-      name: genres.name,
-      slug: genres.slug,
-      description: genres.description,
-      storyCount: count(stories.id),
-    })
-    .from(genres)
-    .leftJoin(storyGenres, eq(genres.id, storyGenres.genreId))
-    .leftJoin(
-      stories,
-      and(eq(storyGenres.storyId, stories.id), eq(stories.isPublished, true)),
-    )
-    .groupBy(genres.id)
-    .orderBy(desc(count(stories.id)), asc(genres.name));
-});
+export const getGenresWithStoryCounts = cache(
+  withCache(
+    async () => {
+      return db
+        .select({
+          id: genres.id,
+          name: genres.name,
+          slug: genres.slug,
+          description: genres.description,
+          storyCount: count(stories.id),
+        })
+        .from(genres)
+        .leftJoin(storyGenres, eq(genres.id, storyGenres.genreId))
+        .leftJoin(
+          stories,
+          and(eq(storyGenres.storyId, stories.id), eq(stories.isPublished, true)),
+        )
+        .groupBy(genres.id)
+        .orderBy(desc(count(stories.id)), asc(genres.name));
+    },
+    ["genres-with-story-counts"],
+    { revalidate: 600, tags: ["genres"] },
+  ),
+);
 
 export const getGenreBySlug = cache(async (slug: string) => {
   const [genre] = await db

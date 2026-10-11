@@ -23,9 +23,12 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "db:check-indexes": "node --env-file=.env.local --import tsx scripts/check-perf-indexes.ts",
-    "db:apply-indexes": "node --env-file=.env.local --import tsx scripts/apply-perf-indexes.ts"
+    "db:apply-indexes": "node --env-file=.env.local --import tsx scripts/apply-perf-indexes.ts",
+    "set-admin": "node --env-file=.env.local scripts/grant-admin.mjs"
   },
   "dependencies": {
+    "@neon/config": "^1.8.6",
+    "@neon/env": "^1.5.3",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.57.0",
     "drizzle-orm": "^0.44.5",
