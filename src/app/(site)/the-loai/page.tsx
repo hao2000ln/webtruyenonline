@@ -2,7 +2,23 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getGenresWithStoryCounts } from "@/db/queries/discovery";
 
-export const metadata: Metadata = { title: "Thể loại truyện", description: "Khám phá truyện theo thể loại yêu thích." };
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://mocthu.vn";
+
+export const metadata: Metadata = {
+  title: "Thể Loại Truyện Chữ Hay Nhất - Mộc Thư",
+  description:
+    "Khám phá danh sách thể loại truyện chữ phong phú: Tiên Hiệp, Huyền Huyễn, Ngôn Tình, Đô Thị, Kiếm Hiệp... cập nhật liên tục.",
+  alternates: { canonical: `${APP_URL}/the-loai` },
+  openGraph: {
+    title: "Thể Loại Truyện Chữ Hay Nhất - Mộc Thư",
+    description:
+      "Khám phá danh sách thể loại truyện chữ phong phú: Tiên Hiệp, Huyền Huyễn, Ngôn Tình, Đô Thị, Kiếm Hiệp... cập nhật liên tục.",
+    url: `${APP_URL}/the-loai`,
+    type: "website",
+    locale: "vi_VN",
+    siteName: "Mộc Thư",
+  },
+};
 
 // Danh sách thể loại rất ít thay đổi — cache 10 phút
 export const revalidate = 600;

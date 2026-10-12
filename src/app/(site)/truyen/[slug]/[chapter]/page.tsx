@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { ReaderExperience } from "@/components/reader/reader-experience";
 import { recordChapterView } from "@/db/mutations/public-views";
 import { getChapterForReader } from "@/db/queries/stories";
@@ -14,30 +14,33 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://mocthu.vn";
 // Chapter content rarely changes after publish — cache for 1 hour
 export const revalidate = 3600;
 
-
-function parseChapterPath(value: string) {
-  const match = /^chuong-(\d+(?:\.\d{1,3})?)$/.exec(value);
+function parseChapterNumberInput(value: string) {
+  // Hỗ trợ cả chuẩn "chuong-1", dạng cũ "chapter-1", "chap-1" và số trần "1"
+  const match = /^(?:chuong-|chapter-|chap-)?(\d+(?:\.\d{1,3})?)$/i.exec(value);
   return match?.[1] ?? null;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, chapter } = await params;
-  const chapterNumber = parseChapterPath(chapter);
+  const chapterNumber = parseChapterNumberInput(chapter);
   const data = chapterNumber ? await getChapterForReader(slug, chapterNumber) : null;
 
   if (!data) return { title: "Không tìm thấy chương" };
 
   const chapterNum = formatChapterNumber(data.chapter.number);
+  const canonicalSegment = `chuong-${chapterNum}`;
+  if (chapter !== canonicalSegment) {
+    permanentRedirect(`/truyen/${data.story.slug}/${canonicalSegment}`);
+  }
+
   const title = `${data.story.title} - Chương ${chapterNum}: ${data.chapter.title}`;
   const description = `Đọc ${data.story.title} chương ${chapterNum}: ${data.chapter.title} tại Mộc Thư.`;
-  const canonicalUrl = `${APP_URL}/truyen/${data.story.slug}/chuong-${chapterNum}`;
+  const canonicalUrl = `${APP_URL}/truyen/${data.story.slug}/${canonicalSegment}`;
 
   return {
     title,
     description,
     alternates: { canonical: canonicalUrl },
-    // Không index các trang chương quá nhiều để tránh thin content penalty
-    // Chỉ index chương 1 và các chương quan trọng — có thể điều chỉnh sau
     robots: { index: true, follow: true },
     openGraph: {
       type: "article",
@@ -60,10 +63,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ChapterPage({ params }: Props) {
   const { slug, chapter } = await params;
-  const chapterPathNumber = parseChapterPath(chapter);
+  const chapterPathNumber = parseChapterNumberInput(chapter);
   const data = chapterPathNumber ? await getChapterForReader(slug, chapterPathNumber) : null;
 
   if (!data) notFound();
+
+  // Chuẩn hóa URL: Chuyển hướng 308 nếu đường dẫn không ở định dạng chuẩn SEO (ví dụ /1 hoặc /chuong-01)
+  const chapterNum = formatChapterNumber(data.chapter.number);
+  const canonicalSegment = `chuong-${chapterNum}`;
+  if (chapter !== canonicalSegment) {
+    permanentRedirect(`/truyen/${data.story.slug}/${canonicalSegment}`);
+  }
+
   void recordChapterView(data.story.id, data.chapter.id).catch(() => {});
 
   const paragraphs = sanitizeChapterContent(data.chapter.content)
@@ -71,7 +82,6 @@ export default async function ChapterPage({ params }: Props) {
     .map((paragraph) => paragraph.trim())
     .filter(Boolean);
 
-  const chapterNum = formatChapterNumber(data.chapter.number);
   const nextHref = data.nextChapter
     ? `/truyen/${data.story.slug}/chuong-${formatChapterNumber(data.nextChapter.number)}`
     : null;

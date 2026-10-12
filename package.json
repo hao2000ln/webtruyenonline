@@ -12,6 +12,7 @@
     "start": "next start",
     "lint": "eslint .",
     "test:reader-storage": "node --import tsx scripts/test-reader-storage.ts",
+    "test:routes": "node --env-file=.env.local --import tsx scripts/test-all-routes.ts",
     "test:admin-stories": "node --env-file=.env.local --import tsx scripts/test-admin-stories.ts",
     "test:admin-chapters": "node --env-file=.env.local --import tsx scripts/test-admin-chapters.ts",
     "test:admin-chapter-import": "node --env-file=.env.local --import tsx scripts/test-admin-chapter-import.ts",

@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { GuestHistoryList } from "@/components/history/guest-history-list";
 
 export const metadata: Metadata = {
-  title: "Lịch sử đọc",
+  title: "Lịch sử đọc | Mộc Thư",
   description: "Tiếp tục những truyện bạn đã đọc trên thiết bị này.",
+  robots: { index: false, follow: true },
 };
 
 export default function HistoryPage() {

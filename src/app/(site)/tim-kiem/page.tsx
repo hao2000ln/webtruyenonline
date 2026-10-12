@@ -20,7 +20,10 @@ function readPage(value: string | string[] | undefined) {
 
 export async function generateMetadata({ searchParams }: { searchParams: SearchParams }): Promise<Metadata> {
   const query = readParam((await searchParams).q).trim();
-  return { title: query ? `Tìm kiếm: ${query}` : "Tìm kiếm truyện" };
+  return {
+    title: query ? `Tìm kiếm: ${query} | Mộc Thư` : "Tìm kiếm truyện | Mộc Thư",
+    robots: { index: false, follow: true },
+  };
 }
 
 export default async function SearchPage({ searchParams }: { searchParams: SearchParams }) {
