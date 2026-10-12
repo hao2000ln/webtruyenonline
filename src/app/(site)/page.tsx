@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Script from "next/script";
 import type { Metadata } from "next";
 import { HeroSpotlight } from "@/components/home/hero-spotlight";
 import { FeaturedBookGrid } from "@/components/home/featured-book-grid";
@@ -13,23 +14,75 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://mocthu.vn";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
+  title: "Mộc Thư - Đọc Truyện Online Hay Nhất, Đọc Truyện Chữ Miễn Phí",
+  description:
+    "Đọc truyện chữ online miễn phí chất lượng cao tại Mộc Thư. Cập nhật liên tục các tác phẩm Tiên Hiệp, Huyền Huyễn, Ngôn Tình, Kiếm Hiệp hot nhất mỗi ngày.",
+  keywords: [
+    "đọc truyện online",
+    "truyện chữ",
+    "đọc truyện chữ",
+    "mộc thư",
+    "truyện tiên hiệp",
+    "truyện kiếm hiệp",
+    "truyện ngôn tình",
+    "tiểu thuyết",
+    "truyện hay",
+  ],
   alternates: { canonical: APP_URL },
   openGraph: {
+    title: "Mộc Thư - Đọc Truyện Online Hay Nhất, Đọc Truyện Chữ Miễn Phí",
+    description:
+      "Đọc truyện chữ online miễn phí chất lượng cao tại Mộc Thư. Cập nhật liên tục các tác phẩm hot nhất mỗi ngày.",
     url: APP_URL,
     type: "website",
+    locale: "vi_VN",
+    siteName: "Mộc Thư",
   },
 };
-
 
 export default async function HomePage() {
   const { latestUpdated, newest, hot, completed, allGenres } =
     await getHomepageStories();
   const featured = hot[0] ?? latestUpdated[0] ?? null;
 
+  const websiteLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Mộc Thư",
+    url: APP_URL,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${APP_URL}/tim-kiem?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+  };
+
+  const organizationLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Mộc Thư",
+    url: APP_URL,
+    logo: `${APP_URL}/icon.svg`,
+  };
+
   return (
-    <main className="min-h-screen bg-slate-50/50 pb-16">
-      {/* Hero Spotlight */}
-      <HeroSpotlight featuredStory={featured} genres={allGenres} />
+    <>
+      <Script
+        id="jsonld-website"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteLd) }}
+      />
+      <Script
+        id="jsonld-org"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLd) }}
+      />
+      <main className="min-h-screen bg-slate-50/50 pb-16">
+        {/* Hero Spotlight */}
+        <HeroSpotlight featuredStory={featured} genres={allGenres} />
 
       {/* Main Content Sections */}
       <div className="site-container py-8 sm:py-10">
@@ -99,5 +152,6 @@ export default async function HomePage() {
         </div>
       </div>
     </main>
+    </>
   );
 }

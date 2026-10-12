@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { db } from "@/db";
 import { chapters, genres, stories } from "@/db/schema";
 import { and, asc, desc, eq } from "drizzle-orm";
+import { formatChapterNumber } from "@/lib/format";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://mocthu.vn";
 
@@ -71,7 +72,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Chapter reader pages
   const chapterRoutes: MetadataRoute.Sitemap = publishedChapters.map((ch) => ({
-    url: `${APP_URL}/truyen/${ch.storySlug}/chuong-${ch.chapterNumber}`,
+    url: `${APP_URL}/truyen/${ch.storySlug}/chuong-${formatChapterNumber(ch.chapterNumber)}`,
     lastModified: ch.updatedAt,
     changeFrequency: "monthly" as const,
     priority: 0.7,

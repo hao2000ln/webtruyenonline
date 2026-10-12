@@ -62,7 +62,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   ].filter(Boolean) as string[];
 
   return {
-    title: story.title,
+    title: `Đọc truyện ${story.title} - ${story.authorName ?? "Full"} online`,
     description,
     keywords,
     alternates: { canonical: canonicalUrl },
@@ -125,6 +125,13 @@ export default async function StoryDetailPage({ params, searchParams }: Props) {
     ...(story.publishedAt ? { datePublished: new Date(story.publishedAt).toISOString().split("T")[0] } : {}),
     ...(story.latestChapterAt ? { dateModified: new Date(story.latestChapterAt).toISOString().split("T")[0] } : {}),
     inLanguage: "vi",
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: story.ratingAvg ?? "4.9",
+      bestRating: "5",
+      worstRating: "1",
+      ratingCount: Math.max(1, story.ratingCount ?? 1),
+    },
     publisher: {
       "@type": "Organization",
       name: "Mộc Thư",

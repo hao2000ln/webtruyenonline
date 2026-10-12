@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Script from "next/script";
 import { notFound } from "next/navigation";
 import { StoryResults } from "@/components/story/story-results";
 import { Pagination } from "@/components/ui/pagination";
@@ -30,15 +31,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!genre) return { title: "Không tìm thấy thể loại" };
   const description = genre.description ?? `Danh sách truyện thể loại ${genre.name} hay nhất tại Mộc Thư.`;
   const canonicalUrl = `${APP_URL}/the-loai/${genre.slug}`;
+  const keywords = [
+    `truyện ${genre.name}`,
+    `truyện chữ ${genre.name}`,
+    `đọc truyện ${genre.name}`,
+    "đọc truyện online",
+    "mộc thư",
+  ];
   return {
-    title: `Truyện ${genre.name}`,
+    title: `Truyện ${genre.name} Hay Nhất`,
     description,
+    keywords,
     alternates: { canonical: canonicalUrl },
     openGraph: {
       type: "website",
       url: canonicalUrl,
-      title: `Truyện ${genre.name} | Mộc Thư`,
+      title: `Truyện ${genre.name} Hay Nhất | Mộc Thư`,
       description,
+      locale: "vi_VN",
+      siteName: "Mộc Thư",
     },
   };
 }
@@ -52,9 +63,25 @@ export default async function GenreDetailPage({ params, searchParams }: Props) {
 
   if (!result) notFound();
 
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Trang chủ", item: APP_URL },
+      { "@type": "ListItem", position: 2, name: "Thể loại", item: `${APP_URL}/the-loai` },
+      { "@type": "ListItem", position: 3, name: result.genre.name, item: `${APP_URL}/the-loai/${result.genre.slug}` },
+    ],
+  };
+
   return (
-    <main className="site-container min-h-[60vh] py-10">
-      <nav className="flex items-center gap-2 text-sm text-content-muted" aria-label="Điều hướng">
+    <>
+      <Script
+        id="jsonld-breadcrumb-genre"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
+      <main className="site-container min-h-[60vh] py-10">
+        <nav className="flex items-center gap-2 text-sm text-content-muted" aria-label="Điều hướng">
         <Link href="/the-loai" className="hover:text-primary">Thể loại</Link><span>/</span><span className="text-content-secondary">{result.genre.name}</span>
       </nav>
       <header className="mt-7 border-b border-ui-border pb-7">
@@ -83,5 +110,6 @@ export default async function GenreDetailPage({ params, searchParams }: Props) {
         <div className="panel py-14 text-center text-content-secondary">Chưa có truyện nào thuộc thể loại này.</div>
       )}
     </main>
+    </>
   );
 }
