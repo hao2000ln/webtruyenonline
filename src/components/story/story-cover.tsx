@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Bookmark, Star } from "lucide-react";
 
 const palettes = [
   "bg-teal-800",
@@ -90,7 +91,7 @@ export function HeroStoryCover({
             <span className="rounded-md border border-teal-700/50 bg-teal-900/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal-200 backdrop-blur-md">
               Mộc Thư
             </span>
-            <span className="text-amber-500 drop-shadow-sm text-sm">🔖</span>
+            <Bookmark className="h-4 w-4 text-amber-500 drop-shadow-sm fill-amber-500" aria-hidden="true" />
           </div>
 
           {/* Center Book Title & Author */}
@@ -109,7 +110,7 @@ export function HeroStoryCover({
           <div className="relative z-10 flex items-center justify-between border-t border-teal-700/40 pt-3 pl-2 text-[11px] text-teal-200/70">
             <span>Sách Chữ</span>
             <span className="flex items-center gap-1 text-amber-400">
-              <span className="text-[10px]">★</span>
+              <Star className="h-3 w-3 fill-amber-400" aria-hidden="true" />
               <span>{rating}</span>
             </span>
           </div>

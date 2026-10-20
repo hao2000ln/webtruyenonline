@@ -365,3 +365,22 @@ export const getChapterForReader = cache(async (storySlug: string, chapterNumber
   )();
 });
 
+/**
+ * Lấy danh sách slug của các truyện đã xuất bản hot nhất để phục vụ generateStaticParams (SSG).
+ * Chỉ chọn duy nhất cột `slug` để giảm thiểu tối đa egress và memory.
+ */
+export const getPublishedStorySlugs = cache(
+  withCache(
+    async (limit = 50) => {
+      return db
+        .select({ slug: stories.slug })
+        .from(stories)
+        .where(eq(stories.isPublished, true))
+        .orderBy(desc(stories.viewCount), desc(stories.publishedAt))
+        .limit(limit);
+    },
+    ["published-story-slugs"],
+    { revalidate: 600, tags: ["stories"] },
+  ),
+);
+

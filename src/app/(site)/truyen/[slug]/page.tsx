@@ -6,7 +6,12 @@ import { ContinueReadingButton } from "@/components/reader/continue-reading-butt
 import { ChapterFilters } from "@/components/story/chapter-filters";
 import { FollowButton } from "@/components/story/follow-button";
 import { HeroStoryCover } from "@/components/story/story-cover";
-import { getStoryChaptersBySlug, getStoryDetail, type ChapterSort } from "@/db/queries/stories";
+import {
+  getPublishedStorySlugs,
+  getStoryChaptersBySlug,
+  getStoryDetail,
+  type ChapterSort,
+} from "@/db/queries/stories";
 import { formatChapterNumber, formatCompactNumber, formatDate, formatReadingTime, getStoryStatusLabel, getStoryStatusColor } from "@/lib/format";
 import { Pagination } from "@/components/ui/pagination";
 import { BookOpen, Eye, Calendar, Clock, Zap } from "lucide-react";
@@ -15,6 +20,22 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://mocthu.vn";
 
 // Cache rendered HTML for 5 minutes — re-renders only when content changes or cache expires
 export const revalidate = 300;
+
+/**
+ * Sinh trước các trang chi tiết truyện hot nhất lúc build (SSG).
+ * Giúp người đọc vào trang truyện ngay lập tức (0ms DB delay) từ CDN cache.
+ */
+export async function generateStaticParams() {
+  try {
+    const topStories = await getPublishedStorySlugs(50);
+    return topStories.map((story) => ({
+      slug: story.slug,
+    }));
+  } catch {
+    // Dự phòng khi build offline hoặc CI/CD không có kết nối DB
+    return [];
+  }
+}
 
 
 type Props = {

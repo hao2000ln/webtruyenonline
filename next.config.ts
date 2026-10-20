@@ -9,8 +9,15 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "5mb",
     },
+    optimizePackageImports: ["lucide-react"],
+  },
+  compiler: {
+    // Tự động loại bỏ console.log trên production để giảm bundle size, giữ lại console.error và warn
+    removeConsole:
+      process.env.NODE_ENV === "production" ? { exclude: ["error", "warn"] } : false,
   },
   images: {
+    formats: ["image/avif", "image/webp"],
     remotePatterns: supabaseImagePattern ? [supabaseImagePattern] : [],
   },
   headers: async () => [

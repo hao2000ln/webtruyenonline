@@ -4,7 +4,12 @@ import Script from "next/script";
 import { notFound } from "next/navigation";
 import { StoryResults } from "@/components/story/story-results";
 import { Pagination } from "@/components/ui/pagination";
-import { getGenreBySlug, getStoriesByGenre, type GenreStorySort } from "@/db/queries/discovery";
+import {
+  getGenreBySlug,
+  getGenresWithStoryCounts,
+  getStoriesByGenre,
+  type GenreStorySort,
+} from "@/db/queries/discovery";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -13,6 +18,22 @@ type Props = {
 
 // Cache rendered HTML 5 phút — thể loại ít thay đổi
 export const revalidate = 300;
+
+/**
+ * Sinh trước danh sách slug của toàn bộ thể loại lúc build (SSG)
+ * Giúp TTFB trang thể loại giảm về mức tức thì (~10-20ms) từ Edge CDN cache.
+ */
+export async function generateStaticParams() {
+  try {
+    const allGenres = await getGenresWithStoryCounts();
+    return allGenres.map((genre) => ({
+      slug: genre.slug,
+    }));
+  } catch {
+    // Dự phòng khi môi trường build không kết nối được database
+    return [];
+  }
+}
 
 
 function readParam(value: string | string[] | undefined) {
