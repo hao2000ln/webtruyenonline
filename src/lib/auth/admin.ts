@@ -1,12 +1,10 @@
 import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth/server";
 import { isAdminUser } from "@/lib/auth/roles";
-import { createClient } from "@/lib/supabase/server";
 
 export async function requireAdmin() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: session } = await auth.getSession();
+  const user = session?.user;
 
   if (!user) {
     redirect("/admin/login");

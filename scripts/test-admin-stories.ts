@@ -136,7 +136,7 @@ try {
   assert.equal(genreCount.value, 0);
   pass("TC10", "delete cascade không lỗi FK; confirm được kiểm tra ở component UI");
 
-  const regularUser = { app_metadata: { role: "user" } } as unknown as User;
+  const regularUser = { id: "test", email: "test@example.com", role: "user", app_metadata: { role: "user" } };
   assert.equal(isAdminUser(regularUser), false);
   const actionSource = await readFile(
     "src/app/admin/(dashboard)/stories/actions.ts",

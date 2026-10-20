@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
+import { auth } from "@/lib/auth/server";
+import { ensureProfile } from "@/lib/auth/profile";
 
 const emailSchema = z.string().trim().email();
 
@@ -32,10 +33,21 @@ export async function loginUser(formData: FormData) {
     redirect(`/dang-nhap?error=invalid-input&next=${encodeURIComponent(next)}`);
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword(credentials.data);
+  try {
+    const { data, error } = await auth.signIn.email({
+      email: credentials.data.email,
+      password: credentials.data.password,
+    });
 
-  if (error) {
+    if (error || !data?.user) {
+      redirect(`/dang-nhap?error=invalid-credentials&next=${encodeURIComponent(next)}`);
+    }
+
+    await ensureProfile(data.user);
+  } catch (err: unknown) {
+    if (err && typeof err === "object" && "digest" in err) {
+      throw err;
+    }
     redirect(`/dang-nhap?error=invalid-credentials&next=${encodeURIComponent(next)}`);
   }
 
@@ -53,20 +65,31 @@ export async function signUpUser(formData: FormData) {
     redirect("/dang-ky?error=invalid-input");
   }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp(credentials.data);
+  try {
+    const { data, error } = await auth.signUp.email({
+      email: credentials.data.email,
+      password: credentials.data.password,
+      name: credentials.data.email.split("@")[0],
+    });
 
-  if (error) {
+    if (error || !data?.user) {
+      redirect("/dang-ky?error=signup-failed");
+    }
+
+    await ensureProfile(data.user);
+  } catch (err: unknown) {
+    if (err && typeof err === "object" && "digest" in err) {
+      throw err;
+    }
     redirect("/dang-ky?error=signup-failed");
   }
 
   revalidatePath("/", "layout");
-  redirect(data.session ? "/tai-khoan" : "/dang-ky?status=check-email");
+  redirect("/tai-khoan");
 }
 
 export async function logoutUser() {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
+  await auth.signOut();
   revalidatePath("/", "layout");
   redirect("/");
 }

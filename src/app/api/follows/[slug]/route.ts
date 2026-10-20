@@ -3,21 +3,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/db";
 import { follows, stories } from "@/db/schema";
 import { ensureProfile } from "@/lib/auth/profile";
-import { createClient } from "@/lib/supabase/server";
+import { auth } from "@/lib/auth/server";
 
 type Context = { params: Promise<{ slug: string }> };
 
-async function getRequestUser(request: NextRequest) {
-  const hasAuthCookie = request.cookies
-    .getAll()
-    .some((c) => c.name.includes("-auth-token"));
-  if (!hasAuthCookie) return null;
-
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
+async function getRequestUser(_request?: NextRequest) {
+  const { data: session } = await auth.getSession();
+  return session?.user ?? null;
 }
 
 async function getPublishedStory(slug: string) {

@@ -30,15 +30,21 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // Supabase Auth không khả dụng hoặc mất mạng, coi như chưa đăng nhập
+    user = null;
+  }
+
   const { pathname } = request.nextUrl;
   const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
   const isAdminLogin = pathname === "/admin/login";
 
   if (isAdminLogin) {
-    if (isAdminUser(user)) {
+    if (isAdminUser(user as any)) {
       return redirectWithSession(request, response, "/admin");
     }
 
@@ -51,7 +57,7 @@ export async function updateSession(request: NextRequest) {
       return redirectWithSession(request, response, "/admin/login");
     }
 
-    if (!isAdminUser(user)) {
+    if (!isAdminUser(user as any)) {
       return redirectWithSession(request, response, "/");
     }
   }

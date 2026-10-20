@@ -2,8 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { isAdminUser } from "@/lib/auth/roles";
-import { createClient } from "@/lib/supabase/server";
+import { auth } from "@/lib/auth/server";
 
 const loginSchema = z.object({
   email: z.string().trim().email(),
@@ -20,23 +19,31 @@ export async function login(formData: FormData) {
     redirect("/admin/login?error=invalid-input");
   }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithPassword(credentials.data);
+  try {
+    const { data, error } = await auth.signIn.email({
+      email: credentials.data.email,
+      password: credentials.data.password,
+    });
 
-  if (error || !data.user) {
+    if (error || !data?.user) {
+      redirect("/admin/login?error=invalid-credentials");
+    }
+
+    if (data.user.role !== "admin") {
+      await auth.signOut();
+      redirect("/admin/login?error=forbidden");
+    }
+  } catch (err: unknown) {
+    if (err && typeof err === "object" && "digest" in err) {
+      throw err;
+    }
     redirect("/admin/login?error=invalid-credentials");
-  }
-
-  if (!isAdminUser(data.user)) {
-    await supabase.auth.signOut();
-    redirect("/admin/login?error=forbidden");
   }
 
   redirect("/admin");
 }
 
 export async function logout() {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
+  await auth.signOut();
   redirect("/admin/login?status=logged-out");
 }

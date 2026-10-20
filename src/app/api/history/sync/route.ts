@@ -4,7 +4,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { chapters, readingHistory, stories } from "@/db/schema";
 import { ensureProfile } from "@/lib/auth/profile";
-import { createClient } from "@/lib/supabase/server";
+import { auth } from "@/lib/auth/server";
 
 const historyRecordSchema = z.object({
   storySlug: z.string().trim().min(1).max(500),
@@ -17,10 +17,8 @@ const payloadSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: session } = await auth.getSession();
+  const user = session?.user;
 
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 

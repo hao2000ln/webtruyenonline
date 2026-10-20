@@ -13,6 +13,8 @@ const errorMessages: Record<string, string> = {
   "invalid-input": "Vui lòng nhập email và mật khẩu hợp lệ.",
   "invalid-credentials": "Email hoặc mật khẩu không chính xác.",
   forbidden: "Tài khoản này không có quyền quản trị.",
+  "auth-service-unavailable":
+    "Không thể kết nối đến máy chủ xác thực. Vui lòng kiểm tra lại dịch vụ Neon Auth.",
 };
 
 type Props = {
