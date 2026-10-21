@@ -25,7 +25,8 @@
     "db:studio": "drizzle-kit studio",
     "db:check-indexes": "node --env-file=.env.local --import tsx scripts/check-perf-indexes.ts",
     "db:apply-indexes": "node --env-file=.env.local --import tsx scripts/apply-perf-indexes.ts",
-    "set-admin": "node --env-file=.env.local scripts/grant-admin.mjs"
+    "set-admin": "node --env-file=.env.local scripts/grant-admin.mjs",
+    "set-password": "node --env-file=.env.local scripts/create-or-set-password.mjs"
   },
   "dependencies": {
     "@neon/config": "^1.8.6",
