@@ -70,6 +70,16 @@ export function GuestHistoryList() {
             <div className="min-w-0 flex-1">
               <Link href={`/truyen/${item.storySlug}`} className="text-lg font-semibold text-content transition hover:text-primary">{item.storyTitle}</Link>
               <p className="mt-1 truncate text-sm text-content-secondary">Chương {item.chapterNumber}: {item.chapterTitle}</p>
+              {typeof item.progressPercent === "number" && item.progressPercent > 0 ? (
+                <div className="mt-3 max-w-sm">
+                  <div className="mb-1 flex justify-between text-[11px] font-semibold text-content-muted">
+                    <span>Tiến độ chương</span><span>{Math.round(item.progressPercent)}%</span>
+                  </div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
+                    <div className="h-full rounded-full bg-teal-600" style={{ width: `${item.progressPercent}%` }} />
+                  </div>
+                </div>
+              ) : null}
               <p className="mt-2 text-xs text-content-muted">Đọc lúc {dateFormatter.format(new Date(item.readAt))}</p>
             </div>
             <div className="flex shrink-0 items-center gap-3">

@@ -29,6 +29,7 @@ export type GuestHistoryRecord = {
   chapterTitle: string;
   href: string;
   readAt: string;
+  progressPercent?: number;
 };
 
 export const DEFAULT_READER_SETTINGS: ReaderSettings = {
@@ -117,7 +118,9 @@ function isGuestHistoryRecord(value: unknown): value is GuestHistoryRecord {
     && typeof record.href === "string"
     && record.href.startsWith(`/truyen/${record.storySlug}/chuong-`)
     && typeof record.readAt === "string"
-    && !Number.isNaN(Date.parse(record.readAt));
+    && !Number.isNaN(Date.parse(record.readAt))
+    && (record.progressPercent === undefined
+      || (isFiniteNumber(record.progressPercent) && record.progressPercent >= 0 && record.progressPercent <= 100));
 }
 
 export function readGuestHistory(storage?: Storage): GuestHistoryRecord[] {

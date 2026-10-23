@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { formatChapterNumber, formatReadingTime } from "@/lib/format";
 import {
@@ -30,6 +31,7 @@ import {
   READER_LINE_HEIGHTS,
   READER_SETTINGS_EVENT,
   READER_SETTINGS_KEY,
+  readGuestHistory,
   saveGuestHistory,
   sanitizeReaderSettings,
   writeReaderSettings,
@@ -38,7 +40,11 @@ import {
   type ReaderTextAlign,
   type ReaderTheme,
 } from "@/lib/reader-storage";
-import { ReaderAnnotations } from "@/components/reader/reader-annotations";
+
+const ReaderAnnotations = dynamic(
+  () => import("@/components/reader/reader-annotations").then((module) => module.ReaderAnnotations),
+  { ssr: false },
+);
 
 type ChapterLink = { number: string; title: string } | null;
 type ChapterSummary = { number: string; title: string };
@@ -88,6 +94,7 @@ export function ReaderExperience({
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isBarVisible, setIsBarVisible] = useState(true);
   const lastScrollY = useRef(0);
+  const progressSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeChapterRef = useRef<HTMLAnchorElement | null>(null);
   const readerContentRef = useRef<HTMLDivElement | null>(null);
 
@@ -115,14 +122,24 @@ export function ReaderExperience({
 
   // Save guest history
   useEffect(() => {
+    const href = `/truyen/${story.slug}/chuong-${formatChapterNumber(chapter.number)}`;
+    const previous = readGuestHistory().find((item) => item.storySlug === story.slug);
+    const savedProgress = previous?.href === href ? previous.progressPercent ?? 0 : 0;
     saveGuestHistory({
       storySlug: story.slug,
       storyTitle: story.title,
       chapterNumber: formatChapterNumber(chapter.number),
       chapterTitle: chapter.title,
-      href: `/truyen/${story.slug}/chuong-${formatChapterNumber(chapter.number)}`,
+      href,
       readAt: new Date().toISOString(),
+      progressPercent: savedProgress,
     });
+    if (savedProgress >= 5 && savedProgress < 95) {
+      window.requestAnimationFrame(() => {
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        window.scrollTo({ top: maxScroll * savedProgress / 100, behavior: "auto" });
+      });
+    }
   }, [chapter.number, chapter.title, story.slug, story.title]);
 
   // Prefetch next chapter silently in background for instant transition
@@ -143,6 +160,18 @@ export function ReaderExperience({
           if (docHeight > 0) {
             const progress = Math.min(100, Math.max(0, (currentY / docHeight) * 100));
             setScrollProgress(progress);
+            if (progressSaveTimer.current) clearTimeout(progressSaveTimer.current);
+            progressSaveTimer.current = setTimeout(() => {
+              saveGuestHistory({
+                storySlug: story.slug,
+                storyTitle: story.title,
+                chapterNumber: formatChapterNumber(chapter.number),
+                chapterTitle: chapter.title,
+                href: `/truyen/${story.slug}/chuong-${formatChapterNumber(chapter.number)}`,
+                readAt: new Date().toISOString(),
+                progressPercent: Math.round(progress),
+              });
+            }, 800);
           }
 
           // Auto-hide floating bar when scrolling down, show on scroll up
@@ -161,8 +190,11 @@ export function ReaderExperience({
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (progressSaveTimer.current) clearTimeout(progressSaveTimer.current);
+    };
+  }, [chapter.number, chapter.title, story.slug, story.title]);
 
   // Keyboard navigation
   useEffect(() => {

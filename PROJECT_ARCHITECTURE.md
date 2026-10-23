@@ -183,6 +183,8 @@ Các route public chính:
 - Bôi đen nội dung để highlight bằng bốn màu hoặc thêm ghi chú văn bản thuần.
 - Guest lưu highlight/ghi chú trong `localStorage`; user đăng nhập được đồng bộ hai chiều với PostgreSQL.
 - Highlight dùng quote + prefix/suffix + offset để tìm lại đoạn sau các chỉnh sửa nhỏ của chương.
+- Reader tự lưu phần trăm cuộn theo chương, khôi phục vị trí khi quay lại và hiển thị tiến độ trong lịch sử.
+- UI highlight/ghi chú được lazy-load; mutation liên tiếp được gom batch trước khi đồng bộ.
 - Guest history bằng `localStorage`, tối đa 50 truyện gần nhất.
 - Đăng ký/đăng nhập bằng Neon Auth.
 - Cookie session SSR persist sau reload.

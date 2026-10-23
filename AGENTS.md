@@ -228,6 +228,8 @@ Performance indexes in `src/db/schema.ts` cover public story feeds, chapter navi
 - Reader text highlights and plain-text notes. Guests use localStorage; signed-in users sync to `reader_annotations`.
 - Text anchors store quote, surrounding context and offsets so highlights can be recovered after small chapter edits.
 - `/ghi-chu` lists the signed-in user's latest annotations.
+- Reader automatically stores chapter scroll progress locally and restores it on the next visit.
+- Annotation UI is lazy-loaded; signed-in writes are batched briefly before synchronization.
 - Neon Auth email/password registration, login, persistent session and logout.
 - Account page and followed-stories page.
 - Follow/unfollow API.

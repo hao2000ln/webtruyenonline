@@ -34,7 +34,9 @@ export function ContinueReadingButton({ storySlug, firstChapterHref }: ContinueR
       className="flex items-center justify-center gap-2 rounded-xl bg-[#0f766e] px-6 py-3.5 text-sm font-bold text-white shadow-md shadow-teal-700/20 transition hover:bg-[#115e59] active:scale-95"
     >
       <BookOpen className="w-4 h-4" />
-      <span>{history ? `Đọc tiếp chương ${history.chapterNumber}` : "Đọc từ đầu"}</span>
+      <span>{history
+        ? `Đọc tiếp chương ${history.chapterNumber}${history.progressPercent ? ` · ${Math.round(history.progressPercent)}%` : ""}`
+        : "Đọc từ đầu"}</span>
     </Link>
   );
 }

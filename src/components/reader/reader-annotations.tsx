@@ -108,6 +108,8 @@ export function ReaderAnnotations({ contentRef, story, chapter, userId }: Props)
   const [editor, setEditor] = useState<{ record: ReaderAnnotationRecord; note: string; isNew: boolean } | null>(null);
   const [syncState, setSyncState] = useState<"idle" | "syncing" | "offline">("idle");
   const syncStarted = useRef(false);
+  const syncQueue = useRef(new Map<string, ReaderAnnotationRecord>());
+  const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const annotationsSnapshot = useSyncExternalStore(
     (onStoreChange) => {
@@ -162,6 +164,22 @@ export function ReaderAnnotations({ contentRef, story, chapter, userId }: Props)
       setSyncState("offline");
     }
   }, [chapter.id, userId]);
+
+  const scheduleSync = useCallback((changed: ReaderAnnotationRecord[]) => {
+    if (!userId) return;
+    for (const record of changed) syncQueue.current.set(record.clientId, record);
+    if (syncTimer.current) clearTimeout(syncTimer.current);
+    syncTimer.current = setTimeout(() => {
+      const batch = [...syncQueue.current.values()];
+      syncQueue.current.clear();
+      syncTimer.current = null;
+      void sync(batch);
+    }, 500);
+  }, [sync, userId]);
+
+  useEffect(() => () => {
+    if (syncTimer.current) clearTimeout(syncTimer.current);
+  }, []);
 
   useEffect(() => {
     if (!userId || syncStarted.current) return;
@@ -231,8 +249,8 @@ export function ReaderAnnotations({ contentRef, story, chapter, userId }: Props)
 
   const persist = useCallback((record: ReaderAnnotationRecord) => {
     writeLocalAnnotations(mergeLocalAnnotations(readLocalAnnotations(), [record]));
-    if (userId) void sync([record]);
-  }, [sync, userId]);
+    scheduleSync([record]);
+  }, [scheduleSync]);
 
   const createRecord = useCallback((color: ReaderAnnotationColor, withNote: boolean) => {
     const root = contentRef.current;
@@ -277,7 +295,20 @@ export function ReaderAnnotations({ contentRef, story, chapter, userId }: Props)
     const now = new Date().toISOString();
     const deleted = selectedAnnotations.map((record) => ({ ...record, deletedAt: now, updatedAt: now }));
     writeLocalAnnotations(mergeLocalAnnotations(readLocalAnnotations(), deleted));
-    if (userId) void sync(deleted);
+    scheduleSync(deleted);
+    setPending(null);
+    window.getSelection()?.removeAllRanges();
+  };
+
+  const applyColor = (color: ReaderAnnotationColor) => {
+    if (selectedAnnotations.length === 0) {
+      createRecord(color, false);
+      return;
+    }
+    const now = new Date().toISOString();
+    const updated = selectedAnnotations.map((record) => ({ ...record, color, updatedAt: now }));
+    writeLocalAnnotations(mergeLocalAnnotations(readLocalAnnotations(), updated));
+    scheduleSync(updated);
     setPending(null);
     window.getSelection()?.removeAllRanges();
   };
@@ -315,7 +346,7 @@ export function ReaderAnnotations({ contentRef, story, chapter, userId }: Props)
           aria-label="Lưu đoạn đã chọn"
         >
           {READER_ANNOTATION_COLORS.map((color) => (
-            <button key={color} type="button" onClick={() => createRecord(color, false)} className={`size-7 rounded-full border-2 border-white shadow ${colorStyles[color]}`} aria-label={`Highlight màu ${color}`} />
+            <button key={color} type="button" onClick={() => applyColor(color)} className={`size-7 rounded-full border-2 border-white shadow ${colorStyles[color]}`} aria-label={`Highlight màu ${color}`} />
           ))}
           <button type="button" onClick={() => createRecord("yellow", true)} className="ml-1 flex h-8 items-center gap-1 rounded-lg bg-slate-900 px-2.5 text-xs font-bold text-white">
             <NotebookPen className="size-3.5" /> Ghi chú

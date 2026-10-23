@@ -57,6 +57,9 @@ history = readGuestHistory(storage);
 assert.equal(history.length, 2);
 assert.equal(history[0].storySlug, "truyen-b", "Truyện vừa đọc phải đứng đầu");
 
+saveGuestHistory({ ...historyRecord("truyen-b", "1"), progressPercent: 42 }, storage);
+assert.equal(readGuestHistory(storage)[0]?.progressPercent, 42, "Tiến độ đọc phải được lưu");
+
 removeGuestHistory("truyen-a", storage);
 assert.deepEqual(readGuestHistory(storage).map((item) => item.storySlug), ["truyen-b"]);
 
