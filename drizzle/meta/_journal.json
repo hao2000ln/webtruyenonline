@@ -50,6 +50,13 @@
       "when": 1791348912108,
       "tag": "0006_fixed_sleeper",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792746627386,
+      "tag": "0007_complete_gargoyle",
+      "breakpoints": true
     }
   ]
 }

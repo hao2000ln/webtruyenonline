@@ -1,6 +1,7 @@
 import {
   bigint,
   boolean,
+  check,
   index,
   integer,
   numeric,
@@ -13,6 +14,7 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export const storyStatusEnum = pgEnum("story_status", ["ONGOING", "COMPLETED", "HIATUS"]);
 
@@ -114,4 +116,28 @@ export const readingHistory = pgTable("reading_history", {
 }, (table) => [
   primaryKey({ columns: [table.userId, table.storyId] }),
   index("reading_history_user_time_idx").on(table.userId, table.lastReadAt),
+]);
+
+export const readerAnnotations = pgTable("reader_annotations", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  storyId: uuid("story_id").notNull().references(() => stories.id, { onDelete: "cascade" }),
+  chapterId: uuid("chapter_id").notNull().references(() => chapters.id, { onDelete: "cascade" }),
+  clientId: uuid("client_id").notNull(),
+  quoteText: text("quote_text").notNull(),
+  prefixText: varchar("prefix_text", { length: 200 }).default("").notNull(),
+  suffixText: varchar("suffix_text", { length: 200 }).default("").notNull(),
+  startOffset: integer("start_offset").notNull(),
+  endOffset: integer("end_offset").notNull(),
+  color: varchar("color", { length: 16 }).default("yellow").notNull(),
+  noteText: text("note_text"),
+  contentHash: varchar("content_hash", { length: 64 }).notNull(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("reader_annotations_user_client_uidx").on(table.userId, table.clientId),
+  index("reader_annotations_user_chapter_idx").on(table.userId, table.chapterId, table.updatedAt),
+  index("reader_annotations_user_updated_idx").on(table.userId, table.updatedAt),
+  check("reader_annotations_offsets_check", sql`${table.startOffset} >= 0 and ${table.endOffset} > ${table.startOffset}`),
 ]);

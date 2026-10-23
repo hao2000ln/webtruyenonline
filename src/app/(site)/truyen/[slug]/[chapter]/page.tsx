@@ -6,6 +6,7 @@ import { recordChapterView } from "@/db/mutations/public-views";
 import { getChapterForReader } from "@/db/queries/stories";
 import { sanitizeChapterContent } from "@/lib/chapter-content";
 import { formatChapterNumber, formatDate } from "@/lib/format";
+import { auth } from "@/lib/auth/server";
 
 type Props = { params: Promise<{ slug: string; chapter: string }> };
 
@@ -67,6 +68,7 @@ export default async function ChapterPage({ params }: Props) {
   const data = chapterPathNumber ? await getChapterForReader(slug, chapterPathNumber) : null;
 
   if (!data) notFound();
+  const { data: session } = await auth.getSession();
 
   // Chuẩn hóa URL: Chuyển hướng 308 nếu đường dẫn không ở định dạng chuẩn SEO (ví dụ /1 hoặc /chuong-01)
   const chapterNum = formatChapterNumber(data.chapter.number);
@@ -147,11 +149,13 @@ export default async function ChapterPage({ params }: Props) {
       <ReaderExperience
         story={data.story}
         chapter={{
+          id: data.chapter.id,
           number: data.chapter.number,
           title: data.chapter.title,
           wordCount: data.chapter.wordCount,
           publishedDate: formatDate(data.chapter.publishedAt),
         }}
+        userId={session?.user?.id ?? null}
         paragraphs={paragraphs}
         previousChapter={data.previousChapter}
         nextChapter={data.nextChapter}

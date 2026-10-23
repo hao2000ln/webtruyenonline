@@ -9,6 +9,14 @@ import { formatReadingTime } from "@/lib/format";
 
 type Values = { storyId: string; chapterNumber: string; title: string; slug: string; content: string; isPublished: boolean; publishedAt: Date | null };
 type Props = { action: (state: ChapterFormState, formData: FormData) => Promise<ChapterFormState>; stories: Array<{ id: string; title: string }>; chapter?: Values };
+type ParchmentModule = {
+  Scope: { BLOCK: unknown };
+  StyleAttributor: new (
+    attributeName: string,
+    cssName: string,
+    options: { scope: unknown; whitelist: string[] },
+  ) => unknown;
+};
 const initialState: ChapterFormState = {};
 const inputClass = "mt-2 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/15";
 
@@ -64,12 +72,12 @@ export function ChapterForm({ action, stories, chapter }: Props) {
     void import("quill").then(({ default: QuillEditor }) => {
       if (!active || !editorRef.current || quillRef.current) return;
       
-      const Parchment = QuillEditor.import("parchment") as any;
+      const Parchment = QuillEditor.import("parchment") as unknown as ParchmentModule;
       const LineHeight = new Parchment.StyleAttributor("lineHeight", "line-height", {
         scope: Parchment.Scope.BLOCK,
         whitelist: ["1.0", "1.2", "1.5", "1.75", "2.0", "2.5", "3.0"]
       });
-      QuillEditor.register(LineHeight, true);
+      QuillEditor.register(LineHeight as Parameters<typeof QuillEditor.register>[0], true);
 
       const editor = new QuillEditor(editorRef.current, {
         theme: "snow",

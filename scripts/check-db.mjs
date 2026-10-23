@@ -17,8 +17,8 @@ try {
     connect_timeout: 10,
   });
 
-  // Keep these sequential. Postgres.js query pipelining is not compatible with
-  // Supabase's transaction pooler.
+  // Keep these sequential. Transaction poolers do not support prepared
+  // statements and pipelining consistently.
   const ping = await sql`select 1 as connected`;
   const tables = await sql`
     select table_name
@@ -47,10 +47,18 @@ try {
     select
       class.relname as table_name,
       class.relrowsecurity as rls_enabled,
-      has_table_privilege('anon', class.oid, 'SELECT') as anon_select,
-      has_table_privilege('anon', class.oid, 'INSERT') as anon_insert,
-      has_table_privilege('anon', class.oid, 'UPDATE') as anon_update,
-      has_table_privilege('anon', class.oid, 'DELETE') as anon_delete
+      exists (
+        select 1
+        from aclexplode(coalesce(class.relacl, acldefault('r', class.relowner))) as privilege
+        where privilege.grantee = 0
+          and privilege.privilege_type = 'SELECT'
+      ) as public_select,
+      exists (
+        select 1
+        from aclexplode(coalesce(class.relacl, acldefault('r', class.relowner))) as privilege
+        where privilege.grantee = 0
+          and privilege.privilege_type in ('INSERT', 'UPDATE', 'DELETE')
+      ) as public_write
     from pg_class as class
     inner join pg_namespace as namespace on namespace.oid = class.relnamespace
     where namespace.nspname = 'public'
@@ -61,8 +69,8 @@ try {
   const tablesWithoutRls = security
     .filter((row) => !row.rls_enabled)
     .map((row) => row.table_name);
-  const anonymousWritableTables = security
-    .filter((row) => row.anon_insert || row.anon_update || row.anon_delete)
+  const publiclyWritableTables = security
+    .filter((row) => row.public_write)
     .map((row) => row.table_name);
 
   console.log(`Database connected: ${ping[0]?.connected === 1 ? "yes" : "no"}`);
@@ -70,7 +78,7 @@ try {
   console.log(`Public enums: ${enums.map((row) => row.enum_name).join(", ") || "none"}`);
   console.log(`Drizzle migration history: ${migrationHistory[0]?.exists ? "found" : "missing"}`);
   console.log(`Tables without RLS: ${tablesWithoutRls.join(", ") || "none"}`);
-  console.log(`Anonymous writable tables: ${anonymousWritableTables.join(", ") || "none"}`);
+  console.log(`Publicly writable tables: ${publiclyWritableTables.join(", ") || "none"}`);
 } catch (error) {
   console.error("Database verification failed");
   console.error(`Error code: ${error?.code ?? "UNKNOWN"}`);

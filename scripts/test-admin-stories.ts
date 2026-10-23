@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { count, eq, ilike, inArray } from "drizzle-orm";
-import type { User } from "@supabase/supabase-js";
 import { db, dbClient } from "../src/db/index";
 import {
   createAdminStory,

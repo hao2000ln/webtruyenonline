@@ -34,13 +34,13 @@ export const CHAPTERS_PER_PAGE = 50;
 export type ChapterSort = "newest" | "oldest";
 
 // Helper bọc unstable_cache nhưng tự động fallback khi chạy trong standalone CLI scripts (tránh invariant error)
-export function withCache<T extends (...args: any[]) => Promise<any>>(
-  fn: T,
+export function withCache<Args extends unknown[], Result>(
+  fn: (...args: Args) => Promise<Result>,
   keyParts: string[],
   options?: { revalidate?: number | false; tags?: string[] },
-): T {
-  let cachedFn: T | null = null;
-  return (async (...args: any[]) => {
+): (...args: Args) => Promise<Result> {
+  let cachedFn: ((...args: Args) => Promise<Result>) | null = null;
+  return async (...args: Args) => {
     try {
       if (!cachedFn) {
         cachedFn = unstable_cache(fn, keyParts, options);
@@ -49,7 +49,7 @@ export function withCache<T extends (...args: any[]) => Promise<any>>(
     } catch {
       return await fn(...args);
     }
-  }) as unknown as T;
+  };
 }
 
 export const getHomepageStories = cache(
@@ -371,7 +371,7 @@ export const getChapterForReader = cache(async (storySlug: string, chapterNumber
  */
 export const getPublishedStorySlugs = cache(
   withCache(
-    async (limit = 50) => {
+    async (limit: number = 50) => {
       return db
         .select({ slug: stories.slug })
         .from(stories)

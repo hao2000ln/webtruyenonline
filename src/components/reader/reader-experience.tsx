@@ -38,13 +38,15 @@ import {
   type ReaderTextAlign,
   type ReaderTheme,
 } from "@/lib/reader-storage";
+import { ReaderAnnotations } from "@/components/reader/reader-annotations";
 
 type ChapterLink = { number: string; title: string } | null;
 type ChapterSummary = { number: string; title: string };
 
 type ReaderExperienceProps = {
-  story: { title: string; slug: string };
-  chapter: { number: string; title: string; wordCount: number; publishedDate: string };
+  story: { id: string; title: string; slug: string };
+  chapter: { id: string; number: string; title: string; wordCount: number; publishedDate: string };
+  userId: string | null;
   paragraphs: string[];
   previousChapter: ChapterLink;
   nextChapter: ChapterLink;
@@ -72,6 +74,7 @@ const alignOptions: Array<{ value: ReaderTextAlign; label: string; icon: typeof 
 export function ReaderExperience({
   story,
   chapter,
+  userId,
   paragraphs,
   previousChapter,
   nextChapter,
@@ -86,6 +89,7 @@ export function ReaderExperience({
   const [isBarVisible, setIsBarVisible] = useState(true);
   const lastScrollY = useRef(0);
   const activeChapterRef = useRef<HTMLAnchorElement | null>(null);
+  const readerContentRef = useRef<HTMLDivElement | null>(null);
 
   const settingsSnapshot = useSyncExternalStore(
     (onStoreChange) => {
@@ -363,11 +367,17 @@ export function ReaderExperience({
             <div className="mt-4 text-xs opacity-40">✦ · · · ✦</div>
           </header>
 
-          <div className="reader-content mt-8 select-text sm:mt-10">
+          <div ref={readerContentRef} className="reader-content mt-8 select-text sm:mt-10">
             {paragraphs.map((paragraph, index) => (
               <div key={index} dangerouslySetInnerHTML={{ __html: paragraph }} />
             ))}
           </div>
+          <ReaderAnnotations
+            contentRef={readerContentRef}
+            story={story}
+            chapter={chapter}
+            userId={userId}
+          />
         </article>
 
         {/* 3. Hero Chapter Transition Cards */}

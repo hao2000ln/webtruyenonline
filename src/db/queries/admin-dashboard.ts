@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, isNull, lt, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, lt, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { authors, chapters, genres, stories } from "@/db/schema";
 
@@ -10,7 +10,7 @@ export async function getAdminDashboard() {
     or(isNull(stories.latestChapterAt), lt(stories.latestChapterAt, staleBefore)),
   );
 
-  // Gom tất cả 8 phép COUNT/SUM thành 1 truy vấn duy nhất để tránh deadlock kết nối trên Transaction Pooler của Supabase
+  // Gom tất cả 8 phép COUNT/SUM thành 1 truy vấn để giảm round-trip qua transaction pooler.
   const [statsRow] = await db.execute<{
     stories: string;
     chapters: string;

@@ -46,7 +46,7 @@ Next.js 16 App Router
 React 19
 TypeScript strict
 Tailwind CSS 4
-Supabase Auth + PostgreSQL + Storage
+Neon Auth + Neon PostgreSQL + Neon Object Storage
 Drizzle ORM + postgres driver
 Zod validation
 Quill 2 rich-text editor
@@ -72,7 +72,7 @@ Hạ tầng dự kiến:
 
 ```text
 Vercel                 Next.js deployment
-Supabase               Auth, PostgreSQL, Storage
+Neon                   Auth, PostgreSQL, Object Storage
 Cloudflare             DNS/CDN nếu cần
 ```
 
@@ -82,7 +82,7 @@ Docker production.
 ## 3. Kiến trúc tổng thể
 
 Dự án là một Next.js fullstack monolith. Public/User App và Admin App nằm trong
-cùng repository, dùng chung PostgreSQL và Supabase nhưng tách route group, layout,
+cùng repository, dùng chung Neon PostgreSQL nhưng tách route group, layout,
 quyền truy cập và UX.
 
 ```text
@@ -90,13 +90,13 @@ Browser
   ├── Public/User App
   │     ├── Server Components → Drizzle → PostgreSQL
   │     ├── Client Components → localStorage
-  │     └── Route Handlers → Supabase Auth/RLS
+  │     └── Route Handlers → Neon Auth → server authorization
   │
   └── Admin App
         ├── Server layout → requireAdmin()
         ├── Server Actions → requireAdmin() → Zod
         ├── Drizzle transaction → PostgreSQL
-        └── Supabase Storage → story-covers
+        └── Neon Object Storage → story-covers
 ```
 
 Các lớp mã nguồn chính:
@@ -108,8 +108,7 @@ src/db/schema.ts          Drizzle schema
 src/db/queries/           Read/query layer
 src/db/mutations/         Mutation/transaction layer
 src/lib/auth/             Auth và role helpers
-src/lib/supabase/         Supabase browser/server/proxy clients
-src/lib/storage/          Supabase Storage helpers
+src/lib/storage/          Neon Object Storage helpers
 src/lib/validation/       Zod schemas
 drizzle/                  Database migrations
 scripts/                  Seed, database check và integration tests
@@ -132,7 +131,8 @@ src/app/
 │   ├── dang-nhap/                  User login
 │   ├── dang-ky/                    User registration
 │   ├── tai-khoan/                  User account + history sync
-│   └── theo-doi/                   Truyện đang theo dõi
+│   ├── theo-doi/                   Truyện đang theo dõi
+│   └── ghi-chu/                    Sổ highlight/ghi chú của user
 │
 ├── admin/
 │   ├── (auth)/login/               Admin login riêng
@@ -146,7 +146,8 @@ src/app/
 │
 ├── api/
 │   ├── follows/[slug]/             Follow/unfollow
-│   └── history/sync/               Sync guest history
+│   ├── history/sync/               Sync guest history
+│   └── annotations/sync/           Sync highlight/ghi chú Reader
 │
 └── auth/confirm/                   Email confirmation callback
 ```
@@ -179,8 +180,11 @@ Các route public chính:
 - Danh sách thể loại và trang truyện theo thể loại.
 - Reader với previous/next chapter.
 - Reader settings: font size, line height, content width và bốn theme.
+- Bôi đen nội dung để highlight bằng bốn màu hoặc thêm ghi chú văn bản thuần.
+- Guest lưu highlight/ghi chú trong `localStorage`; user đăng nhập được đồng bộ hai chiều với PostgreSQL.
+- Highlight dùng quote + prefix/suffix + offset để tìm lại đoạn sau các chỉnh sửa nhỏ của chương.
 - Guest history bằng `localStorage`, tối đa 50 truyện gần nhất.
-- Đăng ký/đăng nhập bằng Supabase Auth.
+- Đăng ký/đăng nhập bằng Neon Auth.
 - Cookie session SSR persist sau reload.
 - Trang tài khoản và đăng xuất.
 - Follow/unfollow truyện.
@@ -192,7 +196,7 @@ Các route public chính:
 
 - Guest luôn được đọc truyện, tìm kiếm và dùng lịch sử local.
 - User đã đăng nhập chỉ thao tác dữ liệu thuộc chính mình.
-- RLS giới hạn `profiles`, `follows`, `reading_history` theo `auth.uid()`.
+- Route Handler xác minh Neon Auth session và chỉ thao tác dữ liệu của chính user.
 - Bookmark, rating và comment chưa triển khai.
 
 ## 6. Reader và nội dung chương
@@ -204,6 +208,7 @@ Reader là phần UX quan trọng nhất:
 - Line height 1.5–2.1.
 - Theme light, sepia, dark và black.
 - Settings và guest history không yêu cầu đăng nhập.
+- Highlight/ghi chú cũng dùng được khi chưa đăng nhập; dữ liệu local được nhận vào tài khoản khi đăng nhập.
 - Nội dung chương được sanitize lại trước khi render public.
 
 Nội dung chương được soạn bằng Quill và lưu dưới dạng HTML đã qua allowlist:
@@ -282,7 +287,7 @@ Layout gồm:
 stories/{storyId}/{uuid}.webp
 ```
 
-- Storage INSERT/UPDATE/DELETE chỉ cho JWT có role Admin qua RLS.
+- Upload/delete chạy server-side bằng Neon branch credential sau `requireAdmin()`.
 - Public chỉ có quyền đọc ảnh trong public bucket.
 - Thay ảnh sử dụng path mới để tránh stale CDN cache.
 - Sau khi database cập nhật thành công, ảnh cũ được xóa.
@@ -378,6 +383,7 @@ story_genres
 chapters
 reading_history
 follows
+reader_annotations
 ```
 
 Quan hệ chính:
@@ -388,6 +394,8 @@ stories  n ─── n genres          qua story_genres
 stories  1 ─── n chapters
 profiles n ─── n stories         qua follows
 profiles 1 ─── n reading_history
+profiles 1 ─── n reader_annotations
+chapters 1 ─── n reader_annotations
 ```
 
 Aggregate denormalized trong `stories`:
@@ -409,14 +417,18 @@ Constraint quan trọng:
 - Chapter slug unique theo `(story_id, slug)`.
 - `story_genres`, `follows`, `reading_history` sử dụng composite primary key phù hợp.
 
+Production hiện có đủ public tables nhưng chưa có
+`drizzle.__drizzle_migrations`. Không chạy `db:migrate` trực tiếp lên production
+trước khi baseline schema và migration history hiện tại.
+
 Migrations:
 
 ```text
 0000_overrated_scream.sql              Schema ban đầu
 0001_enable_rls.sql                    RLS setup
 0002_enable_rls_actual.sql             RLS thực tế
-0003_user_self_service_policies.sql    Profile trigger + user self-service policies
-0004_story_cover_storage.sql           Storage bucket + Admin cover policies
+0003_user_self_service_policies.sql    Marker: profile/user writes handled server-side
+0004_story_cover_storage.sql           Marker: bucket provisioned by neon.ts
 ```
 
 ## 9. Data access và transaction
@@ -428,7 +440,7 @@ Server Component
       ↓
 Drizzle query
       ↓
-Supabase PostgreSQL
+Neon PostgreSQL
 ```
 
 Không gọi HTTP API nội bộ khi Server Component có thể query database trực tiếp.
@@ -438,6 +450,7 @@ Route Handlers chỉ dùng cho thao tác user từ Client Component:
 ```text
 GET/POST/DELETE /api/follows/[slug]
 POST            /api/history/sync
+POST            /api/annotations/sync
 ```
 
 Admin create/update/delete/import dùng Server Actions:
@@ -457,27 +470,27 @@ revalidatePath()
 Các thao tác chapter và bulk import đồng bộ aggregate trong cùng transaction để
 không tạo trạng thái story/chapter lệch nhau.
 
-## 10. Auth, session và RLS
+## 10. Auth, session và authorization
 
-### Supabase Auth
+### Neon Auth
 
 - Email/password cho User và Admin.
-- Session lưu bằng cookie qua `@supabase/ssr`.
-- Proxy refresh token trước khi request đến protected pages.
-- Server luôn xác minh user bằng `supabase.auth.getUser()`.
+- Session lưu bằng cookie thông qua `@neondatabase/auth`.
+- `src/proxy.ts` chặn sớm protected pages.
+- Server xác minh session bằng Neon Auth và kiểm tra quyền lại trong mutation.
 
-### User RLS
+### User authorization
 
-- `profiles`: user chỉ đọc/cập nhật profile của chính mình.
-- `follows`: user chỉ thao tác follow của chính mình.
-- `reading_history`: user chỉ thao tác lịch sử của chính mình.
-- Trigger tạo `profiles` khi có Supabase Auth user mới.
+- `profiles`: user chỉ đọc/cập nhật profile của chính mình qua server.
+- `follows`: user chỉ thao tác follow của chính mình qua server.
+- `reading_history`: user chỉ thao tác lịch sử của chính mình qua server.
+- `ensureProfile()` tạo profile ứng dụng sau đăng ký/đăng nhập.
 
-### Storage RLS
+### Object Storage
 
-- Bucket `story-covers` là public-read.
-- INSERT/UPDATE/DELETE chỉ dành cho authenticated Admin.
-- Storage helper sử dụng session Admin hiện tại, không đưa service-role key xuống browser.
+- Neon bucket `story-covers` là public-read và được khai báo trong `neon.ts`.
+- Upload/delete chạy server-side sau `requireAdmin()`.
+- Credential `AWS_*` của branch không bao giờ được đưa xuống browser.
 
 ## 11. Guest history và user history
 
@@ -512,14 +525,14 @@ Server chỉ ghi lịch sử mới hơn để tránh dữ liệu local cũ ghi �
 - `revalidatePath()` sau Admin mutation/import.
 - Metadata động cơ bản.
 - `next/image` cho story cover.
-- Remote image pattern giới hạn vào Supabase `story-covers`.
+- Remote image pattern giới hạn vào Neon Object Storage `story-covers`.
 - Local font, không phụ thuộc font CDN.
 - Pagination server-side.
 
 Chưa hoàn thành:
 
-- `robots.txt` production.
-- Sitemap cho stories, genres và chapters.
+- Audit và tinh chỉnh `robots.ts` production.
+- Audit sitemap động cho stories, genres và chapters.
 - Canonical đầy đủ.
 - Open Graph image hoàn chỉnh.
 - JSON-LD cho story/chapter.
@@ -533,11 +546,11 @@ Chưa hoàn thành:
 - Input Admin validate bằng Zod.
 - Database unique constraints chống race condition.
 - Admin authorization ở server layout và mọi mutation.
-- User data bảo vệ bằng RLS.
+- User data được bảo vệ bằng Neon Auth session và server authorization.
 - Chapter HTML sanitize bằng allowlist khi lưu, preview và render.
 - Cover validate cả client và server.
 - Import giới hạn kích thước, số chương và payload.
-- Không expose `SUPABASE_SERVICE_ROLE_KEY` ra client.
+- Không expose database, Auth cookie hoặc Object Storage credentials ra client.
 - Secrets nằm trong `.env.local`, không commit.
 
 Cần bổ sung trước production:
@@ -553,14 +566,18 @@ Cần bổ sung trước production:
 
 ```text
 DATABASE_URL
-NEXT_PUBLIC_SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-SUPABASE_SERVICE_ROLE_KEY
+DATABASE_URL_UNPOOLED
+NEON_AUTH_BASE_URL
+NEON_AUTH_COOKIE_SECRET
+AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY
+AWS_ENDPOINT_URL_S3
+AWS_REGION
 NEXT_PUBLIC_APP_URL
 ```
 
-`SUPABASE_SERVICE_ROLE_KEY` chỉ được phép dùng trong server-only operational code.
-Luồng cover hiện tại dùng JWT Admin + Storage RLS, không gửi service key xuống client.
+Các biến `AWS_*`, database URL và cookie secret chỉ được dùng server-side.
+Luồng cover kiểm tra `requireAdmin()` trước khi dùng Neon Object Storage credential.
 
 ## 15. Testing và quality gates
 
@@ -587,7 +604,7 @@ Coverage chính:
 - Bulk Import parse TXT/JSON, draft/publish, skip/update/abort và rollback.
 - Update chapter qua import giữ ID, view count và createdAt.
 - Statistics query và tăng story/chapter view count.
-- Storage bucket config và ba Admin RLS policies.
+- Neon Object Storage upload, public read và cleanup.
 - Fixture integration test có prefix riêng và cleanup sau mỗi lần chạy.
 
 Trạng thái gần nhất:
@@ -598,11 +615,10 @@ Trạng thái gần nhất:
 - Chapters CRUD integration: pass.
 - Bulk Import integration: pass.
 - Statistics integration: pass.
-- Storage bucket/RLS verification: pass.
-- Database migration `0004_story_cover_storage`: đã áp dụng thành công.
+- Neon Object Storage integration: pass.
+- Bucket `story-covers` đã provision từ `neon.ts` trên branch production.
 - Production source compilation: pass.
-- Full `next build`: chưa xác nhận exit code 0 trong môi trường Codex vì Windows
-  sandbox chặn Next.js TypeScript worker với `spawn EPERM`; cần chạy lại local/CI.
+- Full `next build`: pass ngày 2026-10-23.
 
 ## 16. Trạng thái tính năng
 
@@ -662,7 +678,7 @@ MVP có thể public khi:
 - Admin quản lý/import nội dung và ảnh bìa ổn định.
 - SEO metadata, robots và sitemap hoàn chỉnh.
 - Production build và CI pass.
-- Auth/RLS/Storage policy được kiểm tra trên production.
+- Auth/server authorization/Object Storage được kiểm tra trên production.
 - Rate limit tối thiểu cho endpoint dễ bị abuse.
 - Có backup database và dữ liệu nội dung.
 - Có đủ truyện/chương để người dùng khám phá và đọc liên tục.
@@ -670,7 +686,7 @@ MVP có thể public khi:
 ## 18. Tóm tắt
 
 ```text
-Next.js fullstack monolith + Supabase/PostgreSQL/Storage + Drizzle
+Next.js fullstack monolith + Neon Auth/PostgreSQL/Object Storage + Drizzle
 → Public/User App và Admin App tách layout/quyền nhưng dùng chung dữ liệu
 → Reader + Auth + Follow/History + Admin CRUD + Bulk Import đã hoạt động
 → Cover pipeline và Statistics nhẹ đã hoạt động

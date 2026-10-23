@@ -11,6 +11,7 @@ const navigation = [
   { href: "/tim-kiem", label: "Tìm truyện" },
   { href: "/lich-su", label: "Lịch sử" },
   { href: "/theo-doi", label: "Theo dõi" },
+  { href: "/ghi-chu", label: "Ghi chú" },
   { href: "/tai-khoan", label: "Tài khoản" },
 ] as const;
 

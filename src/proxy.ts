@@ -27,5 +27,6 @@ export const config = {
     "/admin/:path*",
     "/tai-khoan",
     "/theo-doi",
+    "/ghi-chu",
   ],
 };

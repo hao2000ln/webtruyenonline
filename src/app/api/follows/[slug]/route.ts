@@ -7,7 +7,8 @@ import { auth } from "@/lib/auth/server";
 
 type Context = { params: Promise<{ slug: string }> };
 
-async function getRequestUser(_request?: NextRequest) {
+async function getRequestUser(request?: NextRequest) {
+  void request;
   const { data: session } = await auth.getSession();
   return session?.user ?? null;
 }

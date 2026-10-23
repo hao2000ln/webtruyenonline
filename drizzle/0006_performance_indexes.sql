@@ -1,5 +1,5 @@
 -- Tối ưu hiệu năng: partial indexes, trigram search, follows index
--- Supabase free: không cần superuser, pg_trgm có sẵn trong shared_preload_libraries
+-- Neon PostgreSQL: pg_trgm được bật trước khi tạo các trigram index.
 
 -- 1. Bật extension trigram để hỗ trợ ILIKE '%query%' có index
 CREATE EXTENSION IF NOT EXISTS pg_trgm;

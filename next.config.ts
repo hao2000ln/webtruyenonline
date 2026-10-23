@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseImagePattern = supabaseUrl ? new URL("/storage/v1/object/public/story-covers/**", supabaseUrl) : null;
+const storageEndpoint = process.env.AWS_ENDPOINT_URL_S3;
+const storyCoverImagePattern = storageEndpoint
+  ? new URL("/story-covers/**", storageEndpoint.endsWith("/") ? storageEndpoint : `${storageEndpoint}/`)
+  : null;
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -18,7 +20,7 @@ const nextConfig: NextConfig = {
   },
   images: {
     formats: ["image/avif", "image/webp"],
-    remotePatterns: supabaseImagePattern ? [supabaseImagePattern] : [],
+    remotePatterns: storyCoverImagePattern ? [storyCoverImagePattern] : [],
   },
   headers: async () => [
     {

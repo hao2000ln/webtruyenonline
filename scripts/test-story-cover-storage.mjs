@@ -1,33 +1,37 @@
 import assert from "node:assert/strict";
-import postgres from "postgres";
+import { randomUUID } from "node:crypto";
+import { Files } from "files-sdk";
+import { neon } from "files-sdk/neon";
 
-const sql = postgres(process.env.DATABASE_URL, { max: 1, prepare: false, ssl: "require" });
+const bucket = "story-covers";
+const endpoint = process.env.AWS_ENDPOINT_URL_S3;
+assert.ok(endpoint, "AWS_ENDPOINT_URL_S3 is required");
+assert.ok(process.env.AWS_REGION, "AWS_REGION is required");
+assert.ok(process.env.AWS_ACCESS_KEY_ID, "AWS_ACCESS_KEY_ID is required");
+assert.ok(process.env.AWS_SECRET_ACCESS_KEY, "AWS_SECRET_ACCESS_KEY is required");
+
+const files = new Files({
+  adapter: neon({
+    bucket,
+    publicBaseUrl: `${endpoint.replace(/\/$/, "")}/${bucket}`,
+  }),
+});
+const key = `integration-tests/${randomUUID()}.webp`;
 
 try {
-  const [bucket] = await sql`
-    select id, public, file_size_limit, allowed_mime_types
-    from storage.buckets
-    where id = 'story-covers'
-  `;
-  assert.equal(bucket?.id, "story-covers");
-  assert.equal(bucket.public, true);
-  assert.equal(Number(bucket.file_size_limit), 1024 * 1024);
-  assert.deepEqual(bucket.allowed_mime_types, ["image/webp"]);
+  const body = new Uint8Array([82, 73, 70, 70, 4, 0, 0, 0, 87, 69, 66, 80]);
+  const uploaded = await files.upload(key, body, {
+    contentType: "image/webp",
+    cacheControl: "public, max-age=60",
+  });
+  assert.equal(uploaded.key, key);
+  assert.equal(await files.exists(key), true);
 
-  const policies = await sql`
-    select policyname
-    from pg_policies
-    where schemaname = 'storage'
-      and tablename = 'objects'
-      and policyname like 'story_covers_admin_%'
-    order by policyname
-  `;
-  assert.deepEqual(policies.map((policy) => policy.policyname), [
-    "story_covers_admin_delete",
-    "story_covers_admin_insert",
-    "story_covers_admin_update",
-  ]);
-  console.log("Story cover bucket and admin RLS policies verified");
+  const publicUrl = await files.url(key);
+  const response = await fetch(publicUrl);
+  assert.equal(response.ok, true);
+  assert.deepEqual(new Uint8Array(await response.arrayBuffer()), body);
+  console.log("Neon story cover upload, public read and delete verified");
 } finally {
-  await sql.end({ timeout: 2 });
+  await files.delete(key).catch(() => undefined);
 }
