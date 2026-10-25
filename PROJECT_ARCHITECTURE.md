@@ -187,6 +187,8 @@ Các route public chính:
 - UI highlight/ghi chú được lazy-load; mutation liên tiếp được gom batch trước khi đồng bộ.
 - Guest history bằng `localStorage`, tối đa 50 truyện gần nhất.
 - Đăng ký/đăng nhập bằng Neon Auth.
+- Neon Auth production cho phép email/password signup; hiện chưa bắt buộc xác minh email.
+- Navigation public dùng menu tài khoản theo session, gom Theo dõi/Ghi chú/Tài khoản/Đăng xuất để tránh tràn desktop và giữ mobile gọn.
 - Cookie session SSR persist sau reload.
 - Trang tài khoản và đăng xuất.
 - Follow/unfollow truyện.

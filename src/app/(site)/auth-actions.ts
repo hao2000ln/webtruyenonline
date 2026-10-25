@@ -16,7 +16,27 @@ const loginSchema = z.object({
 const signUpSchema = z.object({
   email: emailSchema,
   password: z.string().min(8).max(72),
+  confirmPassword: z.string().min(8).max(72),
+}).refine((data) => data.password === data.confirmPassword, {
+  path: ["confirmPassword"],
+  message: "Passwords do not match",
 });
+
+function signUpErrorCode(error: unknown) {
+  if (!error || typeof error !== "object") return "service-unavailable";
+  const code = "code" in error && typeof error.code === "string" ? error.code : "";
+  if (code.includes("USER_ALREADY_EXISTS") || code.includes("EMAIL_ALREADY")) return "account-exists";
+  if (code.includes("SIGNUP_DISABLED")) return "signup-disabled";
+  return "signup-failed";
+}
+
+async function ensureProfileWithoutBlockingAuth(user: Parameters<typeof ensureProfile>[0]) {
+  try {
+    await ensureProfile(user);
+  } catch (error) {
+    console.error("Unable to ensure application profile after authentication", error);
+  }
+}
 
 function safeNext(value: FormDataEntryValue | null) {
   return value === "/theo-doi" ? "/theo-doi" : "/tai-khoan";
@@ -43,7 +63,7 @@ export async function loginUser(formData: FormData) {
       redirect(`/dang-nhap?error=invalid-credentials&next=${encodeURIComponent(next)}`);
     }
 
-    await ensureProfile(data.user);
+    await ensureProfileWithoutBlockingAuth(data.user);
   } catch (err: unknown) {
     if (err && typeof err === "object" && "digest" in err) {
       throw err;
@@ -59,6 +79,7 @@ export async function signUpUser(formData: FormData) {
   const credentials = signUpSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
   });
 
   if (!credentials.success) {
@@ -73,10 +94,10 @@ export async function signUpUser(formData: FormData) {
     });
 
     if (error || !data?.user) {
-      redirect("/dang-ky?error=signup-failed");
+      redirect(`/dang-ky?error=${signUpErrorCode(error)}`);
     }
 
-    await ensureProfile(data.user);
+    await ensureProfileWithoutBlockingAuth(data.user);
   } catch (err: unknown) {
     if (err && typeof err === "object" && "digest" in err) {
       throw err;

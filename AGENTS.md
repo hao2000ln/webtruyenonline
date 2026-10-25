@@ -231,6 +231,8 @@ Performance indexes in `src/db/schema.ts` cover public story feeds, chapter navi
 - Reader automatically stores chapter scroll progress locally and restores it on the next visit.
 - Annotation UI is lazy-loaded; signed-in writes are batched briefly before synchronization.
 - Neon Auth email/password registration, login, persistent session and logout.
+- Production Neon Auth email/password signup is enabled; email verification is currently not required.
+- Public navigation shows compact discovery links plus session-aware login/register or a user menu for follows, notes, account and logout.
 - Account page and followed-stories page.
 - Follow/unfollow API.
 - Guest-history synchronization to `reading_history`.
@@ -467,3 +469,13 @@ Use this order when information conflicts:
 5. `README.md` for basic setup only.
 
 After a material architecture, auth, storage, route, schema, command or feature change, update this file in the same task. Record facts that were verified; label risks and unverified behavior explicitly.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

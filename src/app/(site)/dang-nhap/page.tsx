@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { loginUser } from "@/app/(site)/auth-actions";
 import { AuthCard } from "@/components/auth/auth-card";
+import { AuthSubmitButton } from "@/components/auth/auth-submit-button";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +43,7 @@ export default async function LoginPage({ searchParams }: Props) {
           <label htmlFor="password" className="block text-sm font-semibold text-content">Mật khẩu</label>
           <input id="password" name="password" type="password" autoComplete="current-password" required className="mt-2 h-11 w-full rounded-lg border border-ui-border bg-surface px-3 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15" />
         </div>
-        <button type="submit" className="button-primary button-lg w-full">Đăng nhập</button>
+        <AuthSubmitButton idleLabel="Đăng nhập" pendingLabel="Đang đăng nhập…" />
       </form>
       <p className="mt-5 text-sm text-content-secondary">Chưa có tài khoản? <Link href="/dang-ky" className="font-semibold text-primary">Đăng ký</Link></p>
     </AuthCard>
